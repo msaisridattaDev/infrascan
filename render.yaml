@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: infrascan-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: infrascan-db
+          property: connectionString
+
+databases:
+  - name: infrascan-db
+    plan: free
