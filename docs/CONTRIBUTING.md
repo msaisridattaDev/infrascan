@@ -23,3 +23,4 @@ Conventional commits:
 3. Open a PR against `main` (template auto-fills)
 4. `main` is protected — merging requires an open PR (and, once Phase 13 lands, a passing CI check)
 5. Merge → Vercel/Render auto-deploy
+verification test
