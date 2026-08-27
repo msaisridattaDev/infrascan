@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ActionTileGrid } from './components/ActionTile'
 import { BottomNav } from './components/BottomNav'
 import { PrimaryButton } from './components/Button'
+import { FilterChipRow } from './components/FilterChipRow'
 import { CameraIcon, ChartIcon } from './components/icons'
 import { HeroCTA } from './components/HeroCTA'
 import { MapCard } from './components/MapCard'
@@ -60,6 +61,8 @@ function Home({ observations, loading, onSelect, onNavigate }) {
 }
 
 function Dashboard({ observations, loading, onSelect }) {
+  const [statusFilter, setStatusFilter] = useState('all')
+
   const stats = useMemo(() => {
     const total = observations.length
     const review = observations.filter((o) => o.status === 'review').length
@@ -67,6 +70,11 @@ function Dashboard({ observations, loading, onSelect }) {
     const avgConf = total ? Math.round((observations.reduce((s, o) => s + o.confidence, 0) / total) * 100) : 0
     return { total, review, accepted, avgConf }
   }, [observations])
+
+  const filteredObservations = useMemo(
+    () => (statusFilter === 'all' ? observations : observations.filter((o) => o.status === statusFilter)),
+    [observations, statusFilter]
+  )
 
   const center = observations.length
     ? [observations[0].gps_lat, observations[0].gps_lon]
@@ -81,20 +89,26 @@ function Dashboard({ observations, loading, onSelect }) {
         <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
       </div>
 
+      <div className="mb-4">
+        <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
+      </div>
+
       <div className="flex flex-col md:flex-row gap-4">
         <div className="md:w-2/5 space-y-2 md:max-h-[560px] md:overflow-y-auto">
           <SectionHeader>Recent Reports</SectionHeader>
           {loading && <p className="text-sm text-slate-400">Loading…</p>}
-          {!loading && observations.length === 0 && (
-            <p className="text-sm text-slate-400">No reports yet — submit one from the Capture tab.</p>
+          {!loading && filteredObservations.length === 0 && (
+            <p className="text-sm text-slate-400">
+              {observations.length === 0 ? 'No reports yet — submit one from the Capture tab.' : 'No reports match this filter.'}
+            </p>
           )}
-          {observations.map((o) => (
+          {filteredObservations.map((o) => (
             <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
           ))}
         </div>
 
         <div className="md:w-3/5">
-          <MapCard observations={observations} center={center} />
+          <MapCard observations={filteredObservations} center={center} />
         </div>
       </div>
     </div>
