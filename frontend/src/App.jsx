@@ -7,11 +7,12 @@ import { CameraIcon, ChartIcon } from './components/icons'
 import { HeroCTA } from './components/HeroCTA'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
+import { NearbyReportsList } from './components/NearbyReportsList'
 import { ReportCard } from './components/ReportCard'
 import { ReportDetail } from './components/ReportDetail'
 import { SectionHeader } from './components/SectionHeader'
 import { STATUS_STYLE } from './constants'
-import { withAgeAndRepeat } from './lib/reportStats'
+import { findNearby, withAgeAndRepeat } from './lib/reportStats'
 
 const API = import.meta.env.VITE_API_BASE_URL
 
@@ -115,52 +116,63 @@ function Dashboard({ observations, loading, onSelect }) {
   )
 }
 
-function Capture({ onSubmitted }) {
+function Capture({ observations, onSubmitted }) {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [location, setLocation] = useState(null)
   const [status, setStatus] = useState('idle')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+
+  const nearby = useMemo(
+    () => (location ? findNearby(observations, location.lat, location.lon) : []),
+    [observations, location]
+  )
 
   function onFileChange(e) {
     const f = e.target.files[0]
     setFile(f)
     setResult(null)
     setError(null)
+    setLocation(null)
     setPreview(f ? URL.createObjectURL(f) : null)
-  }
+    if (!f) return
 
-  function submitReport() {
-    if (!file) return
     setStatus('locating')
-    setError(null)
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setStatus('uploading')
-        const form = new FormData()
-        form.append('image', file)
-        form.append('gps_lat', pos.coords.latitude)
-        form.append('gps_lon', pos.coords.longitude)
-        form.append('device_id', 'web-capture')
-
-        fetch(`${API}/observations`, { method: 'POST', body: form })
-          .then((res) => res.json())
-          .then((data) => {
-            setResult(data)
-            setStatus('done')
-            onSubmitted?.()
-          })
-          .catch(() => {
-            setError('Upload failed — is the backend reachable?')
-            setStatus('idle')
-          })
+        setLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+        setStatus('idle')
       },
       () => {
         setError('Location permission denied — GPS is required to report.')
         setStatus('idle')
       }
     )
+  }
+
+  function submitReport() {
+    if (!file || !location) return
+    setStatus('uploading')
+    setError(null)
+
+    const form = new FormData()
+    form.append('image', file)
+    form.append('gps_lat', location.lat)
+    form.append('gps_lon', location.lon)
+    form.append('device_id', 'web-capture')
+
+    fetch(`${API}/observations`, { method: 'POST', body: form })
+      .then((res) => res.json())
+      .then((data) => {
+        setResult(data)
+        setStatus('done')
+        onSubmitted?.()
+      })
+      .catch(() => {
+        setError('Upload failed — is the backend reachable?')
+        setStatus('idle')
+      })
   }
 
   return (
@@ -182,8 +194,10 @@ function Capture({ onSubmitted }) {
         )}
       </label>
 
+      <NearbyReportsList nearby={nearby} />
+
       <PrimaryButton
-        disabled={!file || status === 'uploading' || status === 'locating'}
+        disabled={!file || !location || status === 'uploading' || status === 'locating'}
         onClick={submitReport}
         className="w-full"
       >
@@ -252,6 +266,7 @@ function App() {
           <Dashboard observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
         ) : (
           <Capture
+            observations={observations}
             onSubmitted={() => {
               fetchObservations()
               selectTab('dashboard')

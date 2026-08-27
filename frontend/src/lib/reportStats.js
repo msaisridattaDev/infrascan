@@ -1,6 +1,7 @@
 import { haversineMeters } from './geo'
 
 const NEARBY_RADIUS_M = 20
+const CAPTURE_NEARBY_RADIUS_M = 30
 
 export function withAgeAndRepeat(observations) {
   return observations.map((o) => {
@@ -24,4 +25,13 @@ export function withAgeAndRepeat(observations) {
 
     return { ...o, ageDays, repeatCount, repeatIndex }
   })
+}
+
+export function findNearby(observations, lat, lon, radiusM = CAPTURE_NEARBY_RADIUS_M) {
+  if (lat == null || lon == null) return []
+  return observations
+    .filter((o) => o.gps_lat != null && o.gps_lon != null)
+    .map((o) => ({ ...o, distanceM: haversineMeters(lat, lon, o.gps_lat, o.gps_lon) }))
+    .filter((o) => o.distanceM <= radiusM)
+    .sort((a, b) => a.distanceM - b.distanceM)
 }
