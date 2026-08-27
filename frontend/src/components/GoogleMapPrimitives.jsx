@@ -16,13 +16,14 @@ function worstSeverity(markers) {
   return worst
 }
 
-function clusterIconDataUrl(count, severity) {
+function clusterIconDataUrl(count, severity, { dashed = false } = {}) {
   const size = count >= 50 ? 44 : count >= 10 ? 38 : 32
   const color = SEVERITY_COLOR[severity] || '#64748b'
   const strokeWidth = severity === 'high' ? 3.5 : 2.5
   const r = size / 2 - strokeWidth
+  const dash = dashed ? ` stroke-dasharray="${strokeWidth} ${strokeWidth * 1.4}"` : ''
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="${color}" fill-opacity="0.14" stroke="${color}" stroke-width="${strokeWidth}"/>
+    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="${color}" fill-opacity="0.14" stroke="${color}" stroke-width="${strokeWidth}"${dash}/>
     <text x="${size / 2}" y="${size / 2 + 4.5}" font-size="13" font-weight="700" fill="${color}" text-anchor="middle" font-family="system-ui,sans-serif">${count}</text>
   </svg>`
   return { url: `data:image/svg+xml;base64,${window.btoa(svg)}`, size }
@@ -106,6 +107,44 @@ export function ObservationMarkers({ observations, cluster }) {
     },
     [map]
   )
+
+  return null
+}
+
+// Renders the illustrative demo-density layer (see lib/demoDensity.js) as dashed rings — visually
+// distinct from ObservationMarkers' solid rings — so it never reads as real report data. Points
+// are pre-aggregated already, so these render directly, no MarkerClusterer needed.
+export function DensityMarkers({ points }) {
+  const map = useMap()
+  const markersRef = useRef([])
+  const infoWindowRef = useRef(null)
+
+  useEffect(() => {
+    if (!map || typeof google === 'undefined') return
+
+    markersRef.current.forEach((m) => m.setMap(null))
+    if (!infoWindowRef.current) infoWindowRef.current = new google.maps.InfoWindow()
+
+    const markers = points.map((p) => {
+      const { url, size } = clusterIconDataUrl(p.count, p.severity, { dashed: true })
+      const marker = new google.maps.Marker({
+        map,
+        position: { lat: p.lat, lng: p.lon },
+        icon: { url, scaledSize: new google.maps.Size(size, size) },
+      })
+      marker.addListener('click', () => {
+        infoWindowRef.current.setContent(
+          `<div style="font:13px system-ui;padding:2px">~${p.count} defects · ${p.severity} severity<br/><span style="color:#64748b">Illustrative demo estimate, not a live report</span></div>`
+        )
+        infoWindowRef.current.open({ map, anchor: marker })
+      })
+      return marker
+    })
+
+    markersRef.current = markers
+
+    return () => markers.forEach((m) => m.setMap(null))
+  }, [map, points])
 
   return null
 }

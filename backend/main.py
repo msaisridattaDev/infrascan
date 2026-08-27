@@ -72,6 +72,10 @@ def _seed_observations():
                 select(Observation).where(Observation.content_hash == row["content_hash"])
             ).scalar_one_or_none()
             if existing is not None:
+                # Rows are only ever inserted once, but demo_tag curation is expected to change
+                # after that (e.g. adding PT5/PT6) — keep it in sync on every startup.
+                if existing.demo_tag != row.get("demo_tag"):
+                    existing.demo_tag = row.get("demo_tag")
                 continue
             captured_at = datetime.now(timezone.utc) - timedelta(days=row["days_ago"])
             db.add(
@@ -87,6 +91,7 @@ def _seed_observations():
                     severity=row["severity"],
                     confidence=row["confidence"],
                     status=row["status"],
+                    demo_tag=row.get("demo_tag"),
                 )
             )
         db.commit()
@@ -252,4 +257,5 @@ def _serialize(o: Observation) -> dict:
         "severity": o.severity,
         "confidence": o.confidence,
         "status": o.status,
+        "demo_tag": o.demo_tag,
     }

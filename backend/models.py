@@ -22,6 +22,10 @@ class Observation(Base):
     confidence = Column(Float, nullable=True)
     status = Column(String, default="new")
 
+    # Marks a hand-picked row as part of the curated demo set (e.g. "PT1") shown on Explore/My
+    # Reports; None for every real capture and for older archival seed rows not in that set.
+    demo_tag = Column(String, nullable=True)
+
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
