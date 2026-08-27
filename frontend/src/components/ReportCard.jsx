@@ -22,6 +22,7 @@ export function ReportCard({ o, onClick }) {
         </div>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
           {o.gps_lat?.toFixed(4)}, {o.gps_lon?.toFixed(4)} · {time}
+          {o.distanceM != null && ` · ${Math.round(o.distanceM)}m away`}
         </p>
         <div className="mt-1">
           <AgeRepeatBadge ageDays={o.ageDays} repeatCount={o.repeatCount} repeatIndex={o.repeatIndex} />

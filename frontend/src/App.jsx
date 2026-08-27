@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { AccountabilityRollup } from './components/AccountabilityRollup'
 import { BottomNav } from './components/BottomNav'
 import { PrimaryButton, SecondaryButton } from './components/Button'
 import { FilterChipRow } from './components/FilterChipRow'
 import { HeroCTA } from './components/HeroCTA'
+import { PinIcon } from './components/icons'
 import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
@@ -13,8 +15,16 @@ import { SectionHeader } from './components/SectionHeader'
 import { ThemeToggle } from './components/ThemeToggle'
 import { STATUS_STYLE } from './constants'
 import { getDeviceId, resetDeviceId } from './lib/deviceId'
+import { useAccountabilityRollup } from './lib/useAccountabilityRollup'
 import { findNearby, withAgeAndRepeat } from './lib/reportStats'
 import { useDarkMode } from './lib/useDarkMode'
+
+const RADIUS_OPTIONS = [
+  { id: 'all', label: 'All' },
+  { id: '1', label: '1 km' },
+  { id: '5', label: '5 km' },
+  { id: '10', label: '10 km' },
+]
 
 const API = import.meta.env.VITE_API_BASE_URL
 
@@ -145,6 +155,23 @@ function Home({ observations, onSubmitted }) {
 
 function Explore({ observations, loading, onSelect }) {
   const [statusFilter, setStatusFilter] = useState('all')
+  const [myLocation, setMyLocation] = useState(null)
+  const [radiusKm, setRadiusKm] = useState('all')
+  const [locating, setLocating] = useState(false)
+
+  const { rollup, loading: rollupLoading } = useAccountabilityRollup(observations)
+
+  function useMyLocation() {
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMyLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+        setRadiusKm('5')
+        setLocating(false)
+      },
+      () => setLocating(false)
+    )
+  }
 
   const stats = useMemo(() => {
     const total = observations.length
@@ -154,12 +181,19 @@ function Explore({ observations, loading, onSelect }) {
     return { total, review, accepted, avgConf }
   }, [observations])
 
-  const filteredObservations = useMemo(
+  const statusFiltered = useMemo(
     () => (statusFilter === 'all' ? observations : observations.filter((o) => o.status === statusFilter)),
     [observations, statusFilter]
   )
 
-  const center = observations.length
+  const filteredObservations = useMemo(() => {
+    if (!myLocation || radiusKm === 'all') return statusFiltered
+    return findNearby(statusFiltered, myLocation.lat, myLocation.lon, Number(radiusKm) * 1000)
+  }, [statusFiltered, myLocation, radiusKm])
+
+  const center = myLocation
+    ? [myLocation.lat, myLocation.lon]
+    : observations.length
     ? [observations[0].gps_lat, observations[0].gps_lon]
     : [28.6139, 77.209]
 
@@ -172,8 +206,23 @@ function Explore({ observations, loading, onSelect }) {
         <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
       </div>
 
-      <div className="mb-4">
+      <div className="mb-3">
         <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
+      </div>
+
+      <div className="mb-4 flex items-center gap-2 flex-wrap">
+        {!myLocation ? (
+          <button
+            onClick={useMyLocation}
+            disabled={locating}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 transition"
+          >
+            <PinIcon className="w-3.5 h-3.5" />
+            {locating ? 'Locating…' : 'Near me'}
+          </button>
+        ) : (
+          <FilterChipRow value={radiusKm} onChange={setRadiusKm} options={RADIUS_OPTIONS} />
+        )}
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
@@ -192,6 +241,7 @@ function Explore({ observations, loading, onSelect }) {
 
         <div className="md:w-3/5">
           <MapCard observations={filteredObservations} center={center} />
+          <AccountabilityRollup rollup={rollup} loading={rollupLoading} />
         </div>
       </div>
     </div>
