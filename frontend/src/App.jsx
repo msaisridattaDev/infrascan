@@ -10,6 +10,7 @@ import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
 import { PhotoCapture } from './components/PhotoCapture'
+import { UploadVideoCapture } from './components/UploadVideoCapture'
 import { ReportCard } from './components/ReportCard'
 import { ReportDetail } from './components/ReportDetail'
 import { SectionHeader } from './components/SectionHeader'
@@ -45,40 +46,40 @@ function Header({ theme, onToggleTheme }) {
   )
 }
 
+const HOME_MODES = [
+  { id: 'drive', label: 'Drive' },
+  { id: 'video', label: 'Upload Video' },
+  { id: 'photo', label: 'Single Photo' },
+]
+
+const HOME_SUBTITLES = {
+  drive: "Start a drive and we'll capture, geotag, and review frames automatically.",
+  video: "Upload a driving video and we'll pull frames from it for review, same as a live drive.",
+  photo: "Snap a photo, we'll geotag it and flag it for review automatically.",
+}
+
 function Home({ observations, onSubmitted }) {
   const [mode, setMode] = useState('drive')
 
   return (
     <div className="max-w-md mx-auto px-4 py-6">
-      <HeroCTA
-        title="See a road defect?"
-        subtitle={
-          mode === 'drive'
-            ? "Start a drive and we'll capture, geotag, and review frames automatically."
-            : "Snap a photo, we'll geotag it and flag it for review automatically."
-        }
-      />
+      <HeroCTA title="See a road defect?" subtitle={HOME_SUBTITLES[mode]} />
 
       <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mb-4">
-        <button
-          onClick={() => setMode('drive')}
-          className={`flex-1 py-1.5 text-sm rounded-md font-medium transition ${mode === 'drive' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
-        >
-          Drive
-        </button>
-        <button
-          onClick={() => setMode('photo')}
-          className={`flex-1 py-1.5 text-sm rounded-md font-medium transition ${mode === 'photo' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
-        >
-          Single Photo
-        </button>
+        {HOME_MODES.map((m) => (
+          <button
+            key={m.id}
+            onClick={() => setMode(m.id)}
+            className={`flex-1 py-1.5 text-xs sm:text-sm rounded-md font-medium transition ${mode === m.id ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
+          >
+            {m.label}
+          </button>
+        ))}
       </div>
 
-      {mode === 'drive' ? (
-        <DriveCapture />
-      ) : (
-        <PhotoCapture observations={observations} onSubmitted={onSubmitted} />
-      )}
+      {mode === 'drive' && <DriveCapture />}
+      {mode === 'video' && <UploadVideoCapture onSubmitted={onSubmitted} />}
+      {mode === 'photo' && <PhotoCapture observations={observations} onSubmitted={onSubmitted} />}
 
       <div className="mt-6">
         <InfoDisclosureCard />
@@ -195,7 +196,7 @@ function Explore({ observations, loading, onSelect }) {
         </div>
 
         <div className="md:w-3/5">
-          <MapCard observations={filteredObservations} center={center} />
+          <MapCard observations={filteredObservations} center={center} showMe={!!myLocation} />
           <AccountabilityRollup rollup={rollup} loading={rollupLoading} />
         </div>
       </div>

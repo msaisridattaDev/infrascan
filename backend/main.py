@@ -1,6 +1,6 @@
 import base64
 import hashlib
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +12,7 @@ from backend.geo import haversine_m
 from backend.inference import classify_defect
 from backend.models import Contract, Observation, RoadSegment
 from backend.seed_data import SEGMENTS
+from backend.seed_observations import OBSERVATIONS
 
 JURISDICTION_MATCH_RADIUS_M = 50
 
@@ -29,6 +30,7 @@ app.add_middleware(
 def on_startup():
     Base.metadata.create_all(bind=engine)
     _seed_road_segments()
+    _seed_observations()
 
 
 def _seed_road_segments():
@@ -52,6 +54,36 @@ def _seed_road_segments():
                     responsible_officer=row["responsible_officer"],
                     completion_date=row["completion_date"],
                     dlp_years=row["dlp_years"],
+                )
+            )
+        db.commit()
+    finally:
+        db.close()
+
+
+def _seed_observations():
+    db = SessionLocal()
+    try:
+        for row in OBSERVATIONS:
+            existing = db.execute(
+                select(Observation).where(Observation.content_hash == row["content_hash"])
+            ).scalar_one_or_none()
+            if existing is not None:
+                continue
+            captured_at = datetime.now(timezone.utc) - timedelta(days=row["days_ago"])
+            db.add(
+                Observation(
+                    content_hash=row["content_hash"],
+                    image_data_url=row["image_data_url"],
+                    gps_lat=row["gps_lat"],
+                    gps_lon=row["gps_lon"],
+                    captured_at=captured_at,
+                    created_at=captured_at,
+                    device_id=None,
+                    defect_type=row["defect_type"],
+                    severity=row["severity"],
+                    confidence=row["confidence"],
+                    status=row["status"],
                 )
             )
         db.commit()
