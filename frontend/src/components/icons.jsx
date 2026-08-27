@@ -171,6 +171,14 @@ export function ChevronDownIcon(props) {
   )
 }
 
+export function XIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4 4l16 16M20 4 4 20" />
+    </Svg>
+  )
+}
+
 export function HeartIcon(props) {
   return (
     <Svg {...props}>
