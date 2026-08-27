@@ -2,12 +2,12 @@ export function ActionTile({ icon: Icon, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition"
+      className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition"
     >
-      <span className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-        <Icon className="w-5 h-5 text-slate-700" />
+      <span className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-slate-700 dark:text-slate-200" />
       </span>
-      <span className="text-xs font-medium text-slate-700">{label}</span>
+      <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{label}</span>
     </button>
   )
 }

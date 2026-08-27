@@ -12,20 +12,25 @@ import { NearbyReportsList } from './components/NearbyReportsList'
 import { ReportCard } from './components/ReportCard'
 import { ReportDetail } from './components/ReportDetail'
 import { SectionHeader } from './components/SectionHeader'
+import { ThemeToggle } from './components/ThemeToggle'
 import { STATUS_STYLE } from './constants'
 import { findNearby, withAgeAndRepeat } from './lib/reportStats'
+import { useDarkMode } from './lib/useDarkMode'
 
 const API = import.meta.env.VITE_API_BASE_URL
 
-function Header() {
+function Header({ theme, onToggleTheme }) {
   return (
-    <header className="sticky top-0 z-10 bg-white border-b border-slate-200">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">IS</div>
-        <div>
-          <p className="font-semibold text-slate-900 leading-tight">InfraScan</p>
-          <p className="text-xs text-slate-500 leading-tight">Road Defect Detection</p>
+    <header className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-sm">IS</div>
+          <div>
+            <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight">InfraScan</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight">Road Defect Detection</p>
+          </div>
         </div>
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
     </header>
   )
@@ -50,9 +55,9 @@ function Home({ observations, loading, onSelect, onNavigate }) {
 
       <div className="mt-6 space-y-2">
         <SectionHeader>Recent</SectionHeader>
-        {loading && <p className="text-sm text-slate-400">Loading…</p>}
+        {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
         {!loading && recent.length === 0 && (
-          <p className="text-sm text-slate-400">No reports yet — submit one from Capture.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500">No reports yet — submit one from Capture.</p>
         )}
         {recent.map((o) => (
           <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
@@ -102,9 +107,9 @@ function Dashboard({ observations, loading, onSelect }) {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="md:w-2/5 space-y-2 md:max-h-[560px] md:overflow-y-auto">
           <SectionHeader>Recent Reports</SectionHeader>
-          {loading && <p className="text-sm text-slate-400">Loading…</p>}
+          {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
           {!loading && filteredObservations.length === 0 && (
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 dark:text-slate-500">
               {observations.length === 0 ? 'No reports yet — submit one from the Capture tab.' : 'No reports match this filter.'}
             </p>
           )}
@@ -187,14 +192,14 @@ function Capture({ observations, onSubmitted }) {
         subtitle="Snap a photo, we'll geotag it and flag it for review automatically."
       />
 
-      <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 rounded-2xl p-8 mb-4 cursor-pointer bg-white hover:border-slate-400 transition">
+      <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 mb-4 cursor-pointer bg-white dark:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 transition">
         <input type="file" accept="image/*" capture="environment" onChange={onFileChange} className="hidden" />
         {preview ? (
           <img src={preview} alt="preview" className="max-h-56 rounded-lg" />
         ) : (
           <>
             <span className="text-3xl">📷</span>
-            <span className="text-sm text-slate-500">Tap to take a photo</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Tap to take a photo</span>
           </>
         )}
       </label>
@@ -211,7 +216,7 @@ function Capture({ observations, onSubmitted }) {
         {(status === 'idle' || status === 'done') && 'Submit Report'}
       </PrimaryButton>
 
-      {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+      {error && <p className="text-red-600 dark:text-red-400 text-sm mt-3">{error}</p>}
 
       {result && (
         <div className={`mt-4 rounded-xl border p-4 ${STATUS_STYLE[result.status] || STATUS_STYLE.new}`}>
@@ -230,6 +235,7 @@ function App() {
   const [observations, setObservations] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
+  const [theme, toggleTheme] = useDarkMode()
 
   function fetchObservations() {
     setLoading(true)
@@ -255,8 +261,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Header />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <Header theme={theme} onToggleTheme={toggleTheme} />
       <div className="pb-16">
         {selected ? (
           <ReportDetail observation={selected} onBack={() => setSelectedId(null)} />
