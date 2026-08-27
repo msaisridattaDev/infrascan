@@ -1,6 +1,7 @@
 import { AccountabilityList } from './AccountabilityList'
 import { AgeRepeatBadge } from './AgeRepeatBadge'
 import { Badge } from './Badge'
+import { CommentThread } from './CommentThread'
 import { ConfidenceRing } from './ConfidenceRing'
 import { ContactActionRow } from './ContactActionRow'
 import { DefectTypeChip } from './DefectTypeChip'
@@ -8,6 +9,7 @@ import { EvidencePhotoCard } from './EvidencePhotoCard'
 import { ArrowLeftIcon } from './icons'
 import { LocationRow } from './LocationRow'
 import { SeverityBadge } from './SeverityBadge'
+import { SupportTap } from './SupportTap'
 import { useJurisdiction } from '../lib/useJurisdiction'
 
 export function ReportDetail({ observation, onBack }) {
@@ -49,6 +51,10 @@ export function ReportDetail({ observation, onBack }) {
         <AgeRepeatBadge ageDays={o.ageDays} repeatCount={o.repeatCount} repeatIndex={o.repeatIndex} />
       </div>
 
+      <div className="mt-3">
+        <SupportTap observationId={o.id} />
+      </div>
+
       <div className="mt-4">
         <LocationRow lat={o.gps_lat} lon={o.gps_lon} />
       </div>
@@ -56,6 +62,7 @@ export function ReportDetail({ observation, onBack }) {
       <div className="mt-6 space-y-3">
         <ContactActionRow observation={o} jurisdiction={jurisdiction} loading={jurisdictionLoading} />
         <AccountabilityList jurisdiction={jurisdiction} loading={jurisdictionLoading} />
+        <CommentThread observationId={o.id} />
       </div>
     </div>
   )
