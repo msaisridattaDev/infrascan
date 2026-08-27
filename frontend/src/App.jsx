@@ -6,7 +6,6 @@ import { FilterChipRow } from './components/FilterChipRow'
 import { HeroCTA } from './components/HeroCTA'
 import { HomeDemo } from './components/HomeDemo'
 import { PinIcon } from './components/icons'
-import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { LiabilityMethodology } from './components/LiabilityMethodology'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
@@ -81,10 +80,6 @@ function Home({ observations, onSubmitted }) {
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         <HomeDemo />
-      </div>
-
-      <div className="max-w-md mx-auto px-4 pb-6">
-        <InfoDisclosureCard />
       </div>
     </div>
   )
