@@ -7,6 +7,7 @@ import { MetricCard } from './components/MetricCard'
 import { ReportCard } from './components/ReportCard'
 import { SectionHeader } from './components/SectionHeader'
 import { STATUS_STYLE } from './constants'
+import { withAgeAndRepeat } from './lib/reportStats'
 
 const API = import.meta.env.VITE_API_BASE_URL
 
@@ -46,6 +47,8 @@ function Dashboard() {
     return { total, review, accepted, avgConf }
   }, [observations])
 
+  const enrichedObservations = useMemo(() => withAgeAndRepeat(observations), [observations])
+
   const center = observations.length
     ? [observations[0].gps_lat, observations[0].gps_lon]
     : [28.6139, 77.209]
@@ -66,7 +69,7 @@ function Dashboard() {
           {!loading && observations.length === 0 && (
             <p className="text-sm text-slate-400">No reports yet — submit one from the Capture tab.</p>
           )}
-          {observations.map((o) => (
+          {enrichedObservations.map((o) => (
             <ReportCard key={o.id} o={o} />
           ))}
         </div>
