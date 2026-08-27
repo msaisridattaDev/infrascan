@@ -1,4 +1,5 @@
 import { Badge } from './Badge'
+import { SeverityBadge } from './SeverityBadge'
 
 export function ReportCard({ o }) {
   const time = o.captured_at ? new Date(o.captured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
@@ -10,10 +11,11 @@ export function ReportCard({ o }) {
           <p className="font-medium text-slate-900 capitalize truncate">{o.defect_type?.replace('_', ' ')}</p>
           <Badge status={o.status}>{o.status}</Badge>
         </div>
-        <p className="text-xs text-slate-500 mt-0.5">
-          {Math.round(o.confidence * 100)}% confidence · {o.severity} severity
-        </p>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <div className="flex items-center gap-2 mt-1">
+          <SeverityBadge severity={o.severity} />
+          <span className="text-xs text-slate-500">{Math.round(o.confidence * 100)}% confidence</span>
+        </div>
+        <p className="text-xs text-slate-400 mt-1">
           {o.gps_lat?.toFixed(4)}, {o.gps_lon?.toFixed(4)} · {time}
         </p>
       </div>
