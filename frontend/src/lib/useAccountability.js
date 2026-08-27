@@ -1,20 +1,16 @@
-import { useEffect, useState } from 'react'
-
-const API = import.meta.env.VITE_API_BASE_URL
-
 function emptyGroup(key, extra) {
   return { key, defects: 0, attributed: 0, inWarranty: 0, contractorLiable: 0, ...extra }
 }
 
-function buildBreakdown(matches, keyFn, extraFn) {
+function buildBreakdown(matched, keyFn, extraFn) {
   const groups = new Map()
-  for (const m of matches) {
-    const key = keyFn(m) || 'Unspecified'
-    if (!groups.has(key)) groups.set(key, emptyGroup(key, extraFn?.(m)))
+  for (const o of matched) {
+    const key = keyFn(o) || 'Unspecified'
+    if (!groups.has(key)) groups.set(key, emptyGroup(key, extraFn?.(o)))
     const g = groups.get(key)
     g.defects += 1
     g.attributed += 1
-    if (m.liability_status === 'in_warranty') {
+    if (o.liability_status === 'in_warranty') {
       g.inWarranty += 1
       g.contractorLiable += 1
     }
@@ -24,59 +20,25 @@ function buildBreakdown(matches, keyFn, extraFn) {
     .sort((a, b) => b.defects - a.defects)
 }
 
-// Every count here comes from a real per-observation jurisdiction lookup against the seeded
-// road/contract registry — nothing is aggregated server-side yet (that's a deliberate scope cut:
-// frontend first), so this fetches jurisdiction for the full observation list client-side, same
-// N+1 pattern the existing accountability rollup already used, just extended to cover ward and
-// officer breakdowns too.
+// road_name/ward/contractor_name/liability_status now arrive pre-resolved on every observation
+// (the backend matches each one against the seeded road register at serialize time), so this is
+// a pure client-side aggregation over data already fetched — no per-observation jurisdiction
+// fetch needed, unlike the earlier N+1 version.
 export function useAccountability(observations) {
-  const [results, setResults] = useState([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (observations.length === 0) {
-      setResults([])
-      return
-    }
-    let cancelled = false
-    setLoading(true)
-
-    Promise.all(
-      observations.map((o) =>
-        fetch(`${API}/observations/${o.id}/jurisdiction`)
-          .then((res) => res.json())
-          .then((jurisdiction) => ({ observation: o, jurisdiction }))
-          .catch(() => ({ observation: o, jurisdiction: null }))
-      )
-    ).then((rows) => {
-      if (!cancelled) {
-        setResults(rows)
-        setLoading(false)
-      }
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [observations])
-
-  const perObservation = new Map(results.map((r) => [r.observation.id, r.jurisdiction]))
-  const confidentMatches = results
-    .map((r) => r.jurisdiction)
-    .filter((j) => j && j.match_confidence === 'confident')
+  const matched = observations.filter((o) => o.road_name)
 
   const summary = {
     openDefects: observations.length,
-    attributed: confidentMatches.length,
-    inWarranty: confidentMatches.filter((j) => j.liability_status === 'in_warranty').length,
-    corporationLiable: confidentMatches.filter((j) => j.liability_status === 'expired').length,
+    attributed: matched.length,
+    inWarranty: matched.filter((o) => o.liability_status === 'in_warranty').length,
+    corporationLiable: matched.filter((o) => o.liability_status === 'expired').length,
   }
 
-  const byWard = buildBreakdown(confidentMatches, (m) => m.ward || m.zone)
-  const byContractor = buildBreakdown(confidentMatches, (m) => m.contractor_name, (m) => ({
-    responsibleOfficer: m.responsible_officer,
+  const byWard = buildBreakdown(matched, (o) => o.ward)
+  const byContractor = buildBreakdown(matched, (o) => o.contractor_name, (o) => ({
+    responsibleOfficer: o.responsible_officer,
   }))
-  const byOfficer = buildBreakdown(confidentMatches, (m) => m.responsible_officer || 'Officer attribution unavailable')
+  const byOfficer = buildBreakdown(matched, (o) => o.responsible_officer || 'Officer attribution unavailable')
 
-  return { perObservation, summary, byWard, byContractor, byOfficer, loading }
+  return { summary, byWard, byContractor, byOfficer, loading: false }
 }

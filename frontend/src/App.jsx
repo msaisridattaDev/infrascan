@@ -19,6 +19,7 @@ import { ThemeToggle } from './components/ThemeToggle'
 import { generateDemoClusters } from './lib/demoDensity'
 import { getDeviceId, resetDeviceId } from './lib/deviceId'
 import { useAccountability } from './lib/useAccountability'
+import { useCoverage } from './lib/useCoverage'
 import { withAgeAndRepeat } from './lib/reportStats'
 import { useDarkMode } from './lib/useDarkMode'
 
@@ -204,6 +205,7 @@ function MyReports({ observations, loading, onSelect }) {
 function RoadWatch({ observations, loading }) {
   const [deviceId, setDeviceId] = useState(() => getDeviceId())
   const { summary, byWard, byContractor, byOfficer, loading: accLoading } = useAccountability(observations)
+  const { data: coverage, loading: coverageLoading } = useCoverage()
 
   function handleReset() {
     resetDeviceId()
@@ -228,6 +230,20 @@ function RoadWatch({ observations, loading }) {
 
       <div className="mb-4">
         <RoadWatchBreakdown byWard={byWard} byContractor={byContractor} byOfficer={byOfficer} loading={loading || accLoading} />
+      </div>
+
+      <div className="mb-4">
+        <SectionHeader>Data coverage</SectionHeader>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <MetricCard label="Road segments mapped" value={coverageLoading ? '—' : coverage?.segments_mapped ?? 0} />
+          <MetricCard label="Segments with ward on file" value={coverageLoading ? '—' : coverage?.segments_with_ward ?? 0} />
+          <MetricCard label="Wards covered" value={coverageLoading ? '—' : coverage?.wards_covered ?? 0} />
+          <MetricCard label="Contracts on file" value={coverageLoading ? '—' : coverage?.contracts_on_file ?? 0} />
+        </div>
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
+          These are the roads and contracts InfraScan can currently match reports against — not every road in the
+          city has been mapped yet.
+        </p>
       </div>
 
       <div className="mb-4">

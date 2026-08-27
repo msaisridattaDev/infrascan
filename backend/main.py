@@ -36,9 +36,14 @@ def on_startup():
 def _seed_road_segments():
     db = SessionLocal()
     try:
-        if db.execute(select(RoadSegment)).first() is not None:
-            return
+        # Insert-missing-by-name, not insert-only-if-table-empty: the earlier version returned
+        # immediately once any segment existed, so every road added to SEGMENTS after the very
+        # first deploy (13 of the current 19) silently never reached the live database — the same
+        # class of bug sync_schema() fixed for columns, here for rows.
+        existing_names = {row[0] for row in db.execute(select(RoadSegment.road_name))}
         for row in SEGMENTS:
+            if row["road_name"] in existing_names:
+                continue
             segment = RoadSegment(
                 road_name=row["road_name"],
                 gps_lat=row["gps_lat"],
@@ -112,6 +117,13 @@ def _route_status(confidence: float) -> str:
     return "recapture"
 
 
+def _load_segments_and_contracts(db: Session):
+    segments = db.execute(select(RoadSegment)).scalars().all()
+    contracts = db.execute(select(Contract)).scalars().all()
+    contracts_by_segment = {c.segment_id: c for c in contracts}
+    return segments, contracts_by_segment
+
+
 @app.post("/observations")
 def create_observation(
     image: UploadFile = File(...),
@@ -127,8 +139,8 @@ def create_observation(
         select(Observation).where(Observation.content_hash == content_hash)
     ).scalar_one_or_none()
     if existing is not None:
-        segments = db.execute(select(RoadSegment)).scalars().all()
-        return _serialize(existing, segments)
+        segments, contracts_by_segment = _load_segments_and_contracts(db)
+        return _serialize(existing, segments, contracts_by_segment)
 
     result = classify_defect(image_bytes)
     data_url = f"data:{image.content_type};base64,{base64.b64encode(image_bytes).decode()}"
@@ -147,8 +159,8 @@ def create_observation(
     db.add(obs)
     db.commit()
     db.refresh(obs)
-    segments = db.execute(select(RoadSegment)).scalars().all()
-    return _serialize(obs, segments)
+    segments, contracts_by_segment = _load_segments_and_contracts(db)
+    return _serialize(obs, segments, contracts_by_segment)
 
 
 @app.get("/observations")
@@ -156,8 +168,20 @@ def list_observations(db: Session = Depends(get_db)):
     rows = db.execute(
         select(Observation).order_by(Observation.created_at.desc())
     ).scalars()
-    segments = db.execute(select(RoadSegment)).scalars().all()
-    return [_serialize(o, segments) for o in rows]
+    segments, contracts_by_segment = _load_segments_and_contracts(db)
+    return [_serialize(o, segments, contracts_by_segment) for o in rows]
+
+
+@app.get("/coverage")
+def get_coverage(db: Session = Depends(get_db)):
+    segments, contracts_by_segment = _load_segments_and_contracts(db)
+    wards = {s.ward for s in segments if s.ward}
+    return {
+        "segments_mapped": len(segments),
+        "segments_with_ward": sum(1 for s in segments if s.ward),
+        "wards_covered": len(wards),
+        "contracts_on_file": len(contracts_by_segment),
+    }
 
 
 def _nearest_segment(obs: Observation, segments: list[RoadSegment]):
@@ -253,14 +277,41 @@ def dlp_years_is_default(contract: Contract) -> bool:
     return True
 
 
-def _serialize(o: Observation, segments: list[RoadSegment] | None = None) -> dict:
-    road_name = None
-    ward = None
-    if segments:
-        nearest, nearest_dist = _nearest_segment(o, segments)
-        if nearest is not None and nearest_dist <= JURISDICTION_MATCH_RADIUS_M:
-            road_name = nearest.road_name
-            ward = nearest.ward
+def _attribution_summary(obs: Observation, segments: list[RoadSegment], contracts_by_segment: dict) -> dict | None:
+    """Lighter-weight sibling of get_jurisdiction's full response, computed the same way (same
+    50m match radius, same nearest-segment logic) but shaped for embedding on every observation
+    at list time rather than fetched one-by-one per report."""
+    nearest, nearest_dist = _nearest_segment(obs, segments)
+    if nearest is None or nearest_dist > JURISDICTION_MATCH_RADIUS_M:
+        return None
+
+    summary = {"road_name": nearest.road_name, "ward": nearest.ward, "zone": nearest.zone}
+    contract = contracts_by_segment.get(nearest.id)
+    if contract is None:
+        return summary
+
+    dlp_expiry = date(
+        contract.completion_date.year + contract.dlp_years,
+        contract.completion_date.month,
+        contract.completion_date.day,
+    )
+    summary.update(
+        {
+            "contractor_name": contract.contractor_name,
+            "tender_number": contract.tender_number,
+            "responsible_officer": contract.responsible_officer,
+            "liability_status": "in_warranty" if dlp_expiry >= date.today() else "expired",
+        }
+    )
+    return summary
+
+
+def _serialize(
+    o: Observation,
+    segments: list[RoadSegment] | None = None,
+    contracts_by_segment: dict | None = None,
+) -> dict:
+    attribution = _attribution_summary(o, segments, contracts_by_segment or {}) if segments else None
 
     return {
         "id": o.id,
@@ -274,6 +325,10 @@ def _serialize(o: Observation, segments: list[RoadSegment] | None = None) -> dic
         "confidence": o.confidence,
         "status": o.status,
         "demo_tag": o.demo_tag,
-        "road_name": road_name,
-        "ward": ward,
+        "road_name": attribution.get("road_name") if attribution else None,
+        "ward": attribution.get("ward") if attribution else None,
+        "contractor_name": attribution.get("contractor_name") if attribution else None,
+        "tender_number": attribution.get("tender_number") if attribution else None,
+        "responsible_officer": attribution.get("responsible_officer") if attribution else None,
+        "liability_status": attribution.get("liability_status") if attribution else None,
     }

@@ -206,39 +206,37 @@ export function DriveCapture() {
         )}
       </div>
 
-      {driving && (
-        <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatElapsed(elapsedSeconds)}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">elapsed</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{frameCount}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">frames</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{evidence.length}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">evidence</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{speedKmh.toFixed(0)}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">km/h</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-center gap-1">
-              <ActivityIcon className="w-3 h-3" />
-              {jerkEvents}
-            </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">jerk events</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {motionSupported === null ? '—' : motionSupported ? 'On' : 'Off'}
-            </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">motion sensor</p>
-          </div>
+      <div className="grid grid-cols-3 gap-2 mb-3 text-center">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatElapsed(elapsedSeconds)}</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">elapsed</p>
         </div>
-      )}
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{frameCount}</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">frames</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{evidence.length}</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">evidence</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{speedKmh.toFixed(0)}</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">km/h</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-center gap-1">
+            <ActivityIcon className="w-3 h-3" />
+            {jerkEvents}
+          </p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">jerk events</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-2">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {motionSupported === null ? '—' : motionSupported ? 'On' : 'Off'}
+          </p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">motion sensor</p>
+        </div>
+      </div>
 
       <div className="flex gap-2">
         <PrimaryButton onClick={driving ? stopDriving : startDriving} className="flex-1 flex items-center justify-center gap-2">
