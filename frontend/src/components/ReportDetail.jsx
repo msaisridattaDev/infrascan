@@ -1,6 +1,6 @@
-import { AccountabilityList } from './AccountabilityList'
 import { AgeRepeatBadge } from './AgeRepeatBadge'
 import { Badge } from './Badge'
+import { ChainOfEvidence } from './ChainOfEvidence'
 import { CommentThread } from './CommentThread'
 import { ConfidenceRing } from './ConfidenceRing'
 import { ContactActionRow } from './ContactActionRow'
@@ -61,7 +61,7 @@ export function ReportDetail({ observation, onBack }) {
 
       <div className="mt-6 space-y-3">
         <ContactActionRow observation={o} jurisdiction={jurisdiction} loading={jurisdictionLoading} />
-        <AccountabilityList jurisdiction={jurisdiction} loading={jurisdictionLoading} />
+        <ChainOfEvidence observation={o} jurisdiction={jurisdiction} />
         <CommentThread observationId={o.id} />
       </div>
     </div>
