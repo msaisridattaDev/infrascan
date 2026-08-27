@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git branch*)",
+      "Bash(git show*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git pull*)",
+      "Bash(git checkout*)",
+      "Bash(git stash*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh api*)",
+      "Bash(gh auth status*)",
+      "Bash(npm run*)",
+      "Bash(npm install*)",
+      "Bash(npm ci*)",
+      "Bash(vercel ls*)",
+      "Bash(vercel inspect*)",
+      "Bash(vercel deploy*)",
+      "Bash(render deploys*)",
+      "Bash(render services*)",
+      "Bash(python*)",
+      "Bash(pip install*)",
+      "Bash(cd*)",
+      "Bash(export PATH=*)",
+      "Bash(mkdir*)",
+      "Bash(rm*)",
+      "Bash(grep*)",
+      "Bash(ls*)",
+      "Bash(cat*)",
+      "Bash(curl*)"
+    ]
+  }
+}
