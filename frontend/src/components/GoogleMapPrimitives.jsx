@@ -1,13 +1,29 @@
 import { useEffect, useRef } from 'react'
 import { useMap } from '@vis.gl/react-google-maps'
-import { MarkerClusterer } from '@googlemaps/markerclusterer'
+import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer'
 import { SEVERITY_COLOR } from '../constants'
 
-function clusterIconDataUrl(count) {
+const SEVERITY_RANK = { low: 1, medium: 2, high: 3 }
+
+// A cluster's ring color is driven by the worst severity inside it — a bubble covering 12 reports
+// where even one is high-severity should read as urgent (red), not be diluted to a calmer average.
+function worstSeverity(markers) {
+  let worst = 'low'
+  for (const m of markers) {
+    const s = m.__severity
+    if (SEVERITY_RANK[s] > SEVERITY_RANK[worst]) worst = s
+  }
+  return worst
+}
+
+function clusterIconDataUrl(count, severity) {
   const size = count >= 50 ? 44 : count >= 10 ? 38 : 32
+  const color = SEVERITY_COLOR[severity] || '#64748b'
+  const strokeWidth = severity === 'high' ? 3.5 : 2.5
+  const r = size / 2 - strokeWidth
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-    <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="rgba(15,23,42,0.85)" stroke="white" stroke-width="2"/>
-    <text x="${size / 2}" y="${size / 2 + 5}" font-size="13" font-weight="600" fill="white" text-anchor="middle" font-family="system-ui,sans-serif">${count}</text>
+    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="${color}" fill-opacity="0.14" stroke="${color}" stroke-width="${strokeWidth}"/>
+    <text x="${size / 2}" y="${size / 2 + 4.5}" font-size="13" font-weight="700" fill="${color}" text-anchor="middle" font-family="system-ui,sans-serif">${count}</text>
   </svg>`
   return { url: `data:image/svg+xml;base64,${window.btoa(svg)}`, size }
 }
@@ -42,6 +58,7 @@ export function ObservationMarkers({ observations, cluster }) {
             scale: 9,
           },
         })
+        marker.__severity = o.severity
         marker.addListener('click', () => {
           const type = (o.defect_type || '').replace('_', ' ')
           infoWindowRef.current.setContent(
@@ -58,9 +75,11 @@ export function ObservationMarkers({ observations, cluster }) {
       if (!clustererRef.current) {
         clustererRef.current = new MarkerClusterer({
           map,
+          algorithm: new SuperClusterAlgorithm({ radius: 50, maxZoom: 16 }),
           renderer: {
-            render: ({ count, position }) => {
-              const { url, size } = clusterIconDataUrl(count)
+            render: ({ count, position, markers: clusterMarkers }) => {
+              const severity = worstSeverity(clusterMarkers)
+              const { url, size } = clusterIconDataUrl(count, severity)
               return new google.maps.Marker({
                 position,
                 icon: { url, scaledSize: new google.maps.Size(size, size) },

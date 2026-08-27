@@ -4,7 +4,7 @@ import { SecondaryButton } from './components/Button'
 import { DriveCapture } from './components/DriveCapture'
 import { FilterChipRow } from './components/FilterChipRow'
 import { HeroCTA } from './components/HeroCTA'
-import { PinIcon } from './components/icons'
+import { PinIcon, XIcon } from './components/icons'
 import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { LiabilityMethodology } from './components/LiabilityMethodology'
 import { MapCard } from './components/MapCard'
@@ -155,62 +155,87 @@ function Explore({ observations, loading, onSelect }) {
     : [28.6139, 77.209]
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <MetricCard label="Total Reports" value={stats.total} />
-        <MetricCard label="Under Review" value={stats.review} accent="#d97706" />
-        <MetricCard label="Accepted" value={stats.accepted} accent="#16a34a" />
-        <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
-      </div>
+    <div>
+      <div className="relative h-[52vh] sm:h-[58vh] md:h-[65vh]">
+        <MapCard
+          observations={filteredObservations}
+          center={center}
+          zoom={myLocation ? 13 : 5}
+          height="100%"
+          showMe={!!myLocation}
+          cluster
+          radiusCircle={myLocation && radiusKm !== 'all' ? { center, radiusM: Number(radiusKm) * 1000 } : null}
+        />
 
-      {!myLocation ? (
-        <button
-          onClick={useMyLocation}
-          disabled={locating}
-          className="w-full flex items-center gap-3 mb-4 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition text-left"
-        >
-          <span className="w-9 h-9 rounded-full bg-slate-900 dark:bg-slate-100 flex items-center justify-center flex-shrink-0">
-            <PinIcon className="w-4 h-4 text-white dark:text-slate-900" />
-          </span>
-          <span>
-            <span className="block text-sm font-medium text-slate-900 dark:text-slate-100">
-              {locating ? 'Locating…' : 'Browse reports near me'}
-            </span>
-            <span className="block text-xs text-slate-500 dark:text-slate-400">
-              Use your current location to filter by distance
-            </span>
-          </span>
-        </button>
-      ) : (
-        <div className="mb-4 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-slate-100">
-              <PinIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              {radiusKm === 'all'
-                ? 'Showing reports near you'
-                : `${filteredObservations.length} report${filteredObservations.length === 1 ? '' : 's'} within ${radiusKm}km`}
-            </span>
+        <div className="absolute top-3 left-3 right-3 flex flex-col gap-2 pointer-events-none">
+          {!myLocation ? (
             <button
-              onClick={() => setMyLocation(null)}
-              className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+              onClick={useMyLocation}
+              disabled={locating}
+              className="pointer-events-auto self-start flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur shadow-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-slate-100"
             >
-              Clear
+              <PinIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              {locating ? 'Locating…' : 'Near me'}
             </button>
+          ) : (
+            <div className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 dark:bg-slate-800/95 backdrop-blur shadow-lg border border-slate-200 dark:border-slate-700 self-start">
+              <PinIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                {radiusKm === 'all' ? 'Near you' : `${filteredObservations.length} within ${radiusKm}km`}
+              </span>
+              <div className="flex gap-1 ml-1">
+                {RADIUS_OPTIONS.filter((o) => o.id !== 'all').map((o) => (
+                  <button
+                    key={o.id}
+                    onClick={() => setRadiusKm(o.id)}
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${radiusKm === o.id ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setMyLocation(null)}
+                className="ml-0.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                <XIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          <div className="pointer-events-auto overflow-x-auto -mx-3 px-3">
+            <div className="inline-flex gap-1.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur shadow-lg border border-slate-200 dark:border-slate-700 rounded-full p-1">
+              {LIABILITY_OPTIONS.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => setLiabilityFilter(o.id)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition ${liabilityFilter === o.id ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <FilterChipRow value={radiusKm} onChange={setRadiusKm} options={RADIUS_OPTIONS} />
         </div>
-      )}
-
-      <div className="mb-3">
-        <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
       </div>
 
-      <div className="mb-3">
-        <FilterChipRow value={liabilityFilter} onChange={setLiabilityFilter} options={LIABILITY_OPTIONS} />
-      </div>
+      <div className="relative -mt-4 rounded-t-2xl bg-slate-50 dark:bg-slate-900">
+        <div className="flex justify-center pt-2 pb-1">
+          <span className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+        </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="md:w-2/5 space-y-2 md:max-h-[560px] md:overflow-y-auto">
+        <div className="max-w-6xl mx-auto px-4 pb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
+            <MetricCard label="Total Reports" value={stats.total} />
+            <MetricCard label="Under Review" value={stats.review} accent="#d97706" />
+            <MetricCard label="Accepted" value={stats.accepted} accent="#16a34a" />
+            <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
+          </div>
+
+          <div className="mb-3">
+            <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
+          </div>
+
           <SectionHeader>Recent Reports</SectionHeader>
           {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
           {!loading && filteredObservations.length === 0 && (
@@ -218,20 +243,13 @@ function Explore({ observations, loading, onSelect }) {
               {observations.length === 0 ? 'No reports yet — submit one from Home.' : 'No reports match this filter.'}
             </p>
           )}
-          {filteredObservations.map((o) => (
-            <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
-          ))}
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {filteredObservations.map((o) => (
+              <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
+            ))}
+          </div>
 
-        <div className="md:w-3/5">
-          <MapCard
-            observations={filteredObservations}
-            center={center}
-            showMe={!!myLocation}
-            cluster
-            radiusCircle={myLocation && radiusKm !== 'all' ? { center, radiusM: Number(radiusKm) * 1000 } : null}
-          />
-          <div className="mt-4">
+          <div className="mt-6">
             <RoadWatchBreakdown byWard={byWard} byContractor={byContractor} byOfficer={byOfficer} loading={accLoading} />
           </div>
         </div>
