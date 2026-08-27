@@ -54,7 +54,7 @@ export function ReportDetail({ observation, onBack }) {
       </div>
 
       <div className="mt-6 space-y-3">
-        <ContactActionRow jurisdiction={jurisdiction} loading={jurisdictionLoading} />
+        <ContactActionRow observation={o} jurisdiction={jurisdiction} loading={jurisdictionLoading} />
         <AccountabilityList jurisdiction={jurisdiction} loading={jurisdictionLoading} />
       </div>
     </div>
