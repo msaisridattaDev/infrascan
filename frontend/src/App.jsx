@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ActionTileGrid } from './components/ActionTile'
 import { BottomNav } from './components/BottomNav'
-import { PrimaryButton } from './components/Button'
+import { PrimaryButton, SecondaryButton } from './components/Button'
 import { FilterChipRow } from './components/FilterChipRow'
-import { CameraIcon, ChartIcon } from './components/icons'
 import { HeroCTA } from './components/HeroCTA'
 import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { MapCard } from './components/MapCard'
@@ -14,6 +12,7 @@ import { ReportDetail } from './components/ReportDetail'
 import { SectionHeader } from './components/SectionHeader'
 import { ThemeToggle } from './components/ThemeToggle'
 import { STATUS_STYLE } from './constants'
+import { getDeviceId, resetDeviceId } from './lib/deviceId'
 import { findNearby, withAgeAndRepeat } from './lib/reportStats'
 import { useDarkMode } from './lib/useDarkMode'
 
@@ -36,97 +35,7 @@ function Header({ theme, onToggleTheme }) {
   )
 }
 
-function Home({ observations, loading, onSelect, onNavigate }) {
-  const recent = observations.slice(0, 3)
-
-  return (
-    <div className="max-w-md mx-auto px-4 py-6">
-      <HeroCTA
-        title="See a road defect?"
-        subtitle="Snap a photo, we'll geotag it and flag it for review automatically."
-      />
-
-      <ActionTileGrid
-        tiles={[
-          { icon: CameraIcon, label: 'Capture', onClick: () => onNavigate('capture') },
-          { icon: ChartIcon, label: 'Dashboard', onClick: () => onNavigate('dashboard') },
-        ]}
-      />
-
-      <div className="mt-6 space-y-2">
-        <SectionHeader>Recent</SectionHeader>
-        {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
-        {!loading && recent.length === 0 && (
-          <p className="text-sm text-slate-400 dark:text-slate-500">No reports yet — submit one from Capture.</p>
-        )}
-        {recent.map((o) => (
-          <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
-        ))}
-      </div>
-
-      <div className="mt-6">
-        <InfoDisclosureCard />
-      </div>
-    </div>
-  )
-}
-
-function Dashboard({ observations, loading, onSelect }) {
-  const [statusFilter, setStatusFilter] = useState('all')
-
-  const stats = useMemo(() => {
-    const total = observations.length
-    const review = observations.filter((o) => o.status === 'review').length
-    const accepted = observations.filter((o) => o.status === 'accepted').length
-    const avgConf = total ? Math.round((observations.reduce((s, o) => s + o.confidence, 0) / total) * 100) : 0
-    return { total, review, accepted, avgConf }
-  }, [observations])
-
-  const filteredObservations = useMemo(
-    () => (statusFilter === 'all' ? observations : observations.filter((o) => o.status === statusFilter)),
-    [observations, statusFilter]
-  )
-
-  const center = observations.length
-    ? [observations[0].gps_lat, observations[0].gps_lon]
-    : [28.6139, 77.209]
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <MetricCard label="Total Reports" value={stats.total} />
-        <MetricCard label="Under Review" value={stats.review} accent="#d97706" />
-        <MetricCard label="Accepted" value={stats.accepted} accent="#16a34a" />
-        <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
-      </div>
-
-      <div className="mb-4">
-        <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="md:w-2/5 space-y-2 md:max-h-[560px] md:overflow-y-auto">
-          <SectionHeader>Recent Reports</SectionHeader>
-          {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
-          {!loading && filteredObservations.length === 0 && (
-            <p className="text-sm text-slate-400 dark:text-slate-500">
-              {observations.length === 0 ? 'No reports yet — submit one from the Capture tab.' : 'No reports match this filter.'}
-            </p>
-          )}
-          {filteredObservations.map((o) => (
-            <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
-          ))}
-        </div>
-
-        <div className="md:w-3/5">
-          <MapCard observations={filteredObservations} center={center} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function Capture({ observations, onSubmitted }) {
+function Home({ observations, onSubmitted }) {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [location, setLocation] = useState(null)
@@ -170,7 +79,7 @@ function Capture({ observations, onSubmitted }) {
     form.append('image', file)
     form.append('gps_lat', location.lat)
     form.append('gps_lon', location.lon)
-    form.append('device_id', 'web-capture')
+    form.append('device_id', getDeviceId())
 
     fetch(`${API}/observations`, { method: 'POST', body: form })
       .then((res) => res.json())
@@ -226,6 +135,119 @@ function Capture({ observations, onSubmitted }) {
           <p className="text-sm">Status: {result.status}</p>
         </div>
       )}
+
+      <div className="mt-6">
+        <InfoDisclosureCard />
+      </div>
+    </div>
+  )
+}
+
+function Explore({ observations, loading, onSelect }) {
+  const [statusFilter, setStatusFilter] = useState('all')
+
+  const stats = useMemo(() => {
+    const total = observations.length
+    const review = observations.filter((o) => o.status === 'review').length
+    const accepted = observations.filter((o) => o.status === 'accepted').length
+    const avgConf = total ? Math.round((observations.reduce((s, o) => s + o.confidence, 0) / total) * 100) : 0
+    return { total, review, accepted, avgConf }
+  }, [observations])
+
+  const filteredObservations = useMemo(
+    () => (statusFilter === 'all' ? observations : observations.filter((o) => o.status === statusFilter)),
+    [observations, statusFilter]
+  )
+
+  const center = observations.length
+    ? [observations[0].gps_lat, observations[0].gps_lon]
+    : [28.6139, 77.209]
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <MetricCard label="Total Reports" value={stats.total} />
+        <MetricCard label="Under Review" value={stats.review} accent="#d97706" />
+        <MetricCard label="Accepted" value={stats.accepted} accent="#16a34a" />
+        <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
+      </div>
+
+      <div className="mb-4">
+        <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="md:w-2/5 space-y-2 md:max-h-[560px] md:overflow-y-auto">
+          <SectionHeader>Recent Reports</SectionHeader>
+          {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
+          {!loading && filteredObservations.length === 0 && (
+            <p className="text-sm text-slate-400 dark:text-slate-500">
+              {observations.length === 0 ? 'No reports yet — submit one from Home.' : 'No reports match this filter.'}
+            </p>
+          )}
+          {filteredObservations.map((o) => (
+            <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
+          ))}
+        </div>
+
+        <div className="md:w-3/5">
+          <MapCard observations={filteredObservations} center={center} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MyReports({ observations, loading, onSelect }) {
+  const mine = useMemo(() => observations.filter((o) => o.device_id === getDeviceId()), [observations])
+
+  return (
+    <div className="max-w-md mx-auto px-4 py-6">
+      <SectionHeader>My Reports</SectionHeader>
+      {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
+      {!loading && mine.length === 0 && (
+        <p className="text-sm text-slate-400 dark:text-slate-500">
+          You haven't submitted any reports from this device yet.
+        </p>
+      )}
+      <div className="space-y-2">
+        {mine.map((o) => (
+          <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Me({ observations }) {
+  const [deviceId, setDeviceId] = useState(() => getDeviceId())
+  const myCount = useMemo(() => observations.filter((o) => o.device_id === deviceId).length, [observations, deviceId])
+
+  function handleReset() {
+    resetDeviceId()
+    setDeviceId(getDeviceId())
+  }
+
+  return (
+    <div className="max-w-md mx-auto px-4 py-6">
+      <SectionHeader>Me</SectionHeader>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">This device</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-all font-mono">{deviceId}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300 mt-3">{myCount} report{myCount === 1 ? '' : 's'} from this device</p>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          InfraScan doesn't use accounts or logins — reports are tied to this browser only, not to you personally.
+        </p>
+      </div>
+
+      <div className="mt-4">
+        <SecondaryButton className="w-full" onClick={handleReset}>
+          Reset this device's identity
+        </SecondaryButton>
+      </div>
     </div>
   )
 }
@@ -268,21 +290,18 @@ function App() {
           <ReportDetail observation={selected} onBack={() => setSelectedId(null)} />
         ) : tab === 'home' ? (
           <Home
-            observations={enrichedObservations}
-            loading={loading}
-            onSelect={setSelectedId}
-            onNavigate={selectTab}
-          />
-        ) : tab === 'dashboard' ? (
-          <Dashboard observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
-        ) : (
-          <Capture
             observations={observations}
             onSubmitted={() => {
               fetchObservations()
-              selectTab('dashboard')
+              selectTab('explore')
             }}
           />
+        ) : tab === 'explore' ? (
+          <Explore observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
+        ) : tab === 'reports' ? (
+          <MyReports observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
+        ) : (
+          <Me observations={observations} />
         )}
       </div>
       <BottomNav tab={tab} setTab={selectTab} />
