@@ -1,3 +1,4 @@
+import { AccountabilityPanel } from './AccountabilityPanel'
 import { AgeRepeatBadge } from './AgeRepeatBadge'
 import { Badge } from './Badge'
 import { ChainOfEvidence } from './ChainOfEvidence'
@@ -38,6 +39,7 @@ export function ReportDetail({ observation, onBack }) {
       <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 capitalize mt-3">
         {o.defect_type?.replace('_', ' ')}
       </h1>
+      <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Report {o.id}</p>
 
       <div className="flex items-center gap-3 mt-2">
         <SeverityBadge severity={o.severity} />
@@ -60,6 +62,7 @@ export function ReportDetail({ observation, onBack }) {
       </div>
 
       <div className="mt-6 space-y-3">
+        <AccountabilityPanel jurisdiction={jurisdiction} loading={jurisdictionLoading} />
         <ContactActionRow observation={o} jurisdiction={jurisdiction} loading={jurisdictionLoading} />
         <ChainOfEvidence observation={o} jurisdiction={jurisdiction} />
         <CommentThread observationId={o.id} />

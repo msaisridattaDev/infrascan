@@ -1,17 +1,20 @@
 """
-Seeded road-segment + contract data for Phase 7B (jurisdiction matching).
+Seeded road-segment + contract data for jurisdiction matching and the accountability model.
 
-Simplified per the deployment playbook: 5-10 manually seeded rows approximating
-a real drive route, not a real GeoSadak/PMGSY dataset ingestion. Contractor names,
-tender numbers, and officer titles follow real PMGSY/PWD bidding-document
-conventions (5-year Defects Liability Period, "PWD/<state>/<year>/RM-<serial>"
-tender numbering, "Executive Engineer, PWD <division>" officer titles) but are
-illustrative, not drawn from an actual government tender registry.
+Simplified per the deployment playbook: hand-seeded rows approximating real drive
+routes, not a real GeoSadak/PMGSY/municipal-registry ingestion. Contractor names,
+tender numbers, and officer titles follow real PMGSY/PWD/municipal bidding-document
+conventions ("PWD/<state>/<year>/RM-<serial>" tender numbering, "Executive Engineer,
+<division>" officer titles, ward numbers in plausible ranges for the issuing body)
+but are illustrative — not drawn from an actual government tender or ward-boundary
+registry. `ward` is left None for state PWD-controlled arterial roads (Delhi's
+NDMC/PWD roads aren't ward-administered); it's set for roads under a municipal
+corporation (BBMP/KMC/PMC/GHMC/GMC), which do use ward numbers, following the same
+"realistic but not verified" convention as the rest of this file.
 
-Road segments cluster around central Delhi (28.6139, 77.2090), the coordinates
-used by the demo's test captures, so at least one segment is a close match and
-several are deliberately far enough away to exercise the fail-closed "uncertain"
-path.
+Road segments span several Indian cities so at least one segment is a close match
+for real captured/seeded observations, and several are deliberately far enough away
+to exercise the fail-closed "uncertain" path.
 """
 
 from datetime import date
@@ -21,9 +24,12 @@ SEGMENTS = [
         "road_name": "Kartavya Path, New Delhi",
         "gps_lat": 28.6139,
         "gps_lon": 77.2090,
+        "ward": None,
+        "zone": "PWD Delhi Division IV",
         "contractor_name": "Shree Balaji Construction Co.",
         "tender_number": "PWD/NCT/2023/RM-118",
         "responsible_officer": "Executive Engineer, PWD Delhi Division IV",
+        "work_period_start": date(2023, 6, 1),
         "completion_date": date(2023, 11, 15),
         "dlp_years": 5,
     },
@@ -31,9 +37,12 @@ SEGMENTS = [
         "road_name": "Tilak Marg, New Delhi",
         "gps_lat": 28.6160,
         "gps_lon": 77.2110,
+        "ward": None,
+        "zone": "PWD Delhi Division III",
         "contractor_name": "Anand Infra Projects Pvt. Ltd.",
         "tender_number": "PWD/NCT/2022/RM-076",
         "responsible_officer": "Executive Engineer, PWD Delhi Division III",
+        "work_period_start": date(2021, 9, 1),
         "completion_date": date(2022, 3, 1),
         "dlp_years": 5,
     },
@@ -41,9 +50,12 @@ SEGMENTS = [
         "road_name": "Man Singh Road, New Delhi",
         "gps_lat": 28.6100,
         "gps_lon": 77.2050,
+        "ward": None,
+        "zone": "PWD Delhi Division II",
         "contractor_name": "Modern Road Builders",
         "tender_number": "PWD/NCT/2021/RM-054",
         "responsible_officer": "Executive Engineer, PWD Delhi Division II",
+        "work_period_start": date(2020, 2, 1),
         "completion_date": date(2020, 8, 20),
         "dlp_years": 5,
     },
@@ -51,9 +63,12 @@ SEGMENTS = [
         "road_name": "Ring Road (ITO), Delhi",
         "gps_lat": 28.6500,
         "gps_lon": 77.2300,
+        "ward": None,
+        "zone": "PWD Delhi Division I",
         "contractor_name": "Capital Highways Ltd.",
         "tender_number": "PWD/NCT/2023/RM-142",
         "responsible_officer": "Executive Engineer, PWD Delhi Division I",
+        "work_period_start": date(2022, 12, 1),
         "completion_date": date(2023, 6, 10),
         "dlp_years": 5,
     },
@@ -61,9 +76,12 @@ SEGMENTS = [
         "road_name": "Aurobindo Marg, New Delhi",
         "gps_lat": 28.5800,
         "gps_lon": 77.1900,
+        "ward": None,
+        "zone": "PWD Delhi Division V",
         "contractor_name": "Sunrise Road Contractors",
         "tender_number": "PWD/NCT/2022/RM-091",
         "responsible_officer": "Executive Engineer, PWD Delhi Division V",
+        "work_period_start": date(2022, 3, 1),
         "completion_date": date(2022, 9, 5),
         "dlp_years": 5,
     },
@@ -71,9 +89,12 @@ SEGMENTS = [
         "road_name": "Bhagwan Das Road, New Delhi",
         "gps_lat": 28.6350,
         "gps_lon": 77.2200,
+        "ward": None,
+        "zone": "PWD Delhi Division IV",
         "contractor_name": "Metro Infra Developers Pvt. Ltd.",
         "tender_number": "PWD/NCT/2024/RM-165",
         "responsible_officer": "Executive Engineer, PWD Delhi Division IV",
+        "work_period_start": date(2023, 8, 1),
         "completion_date": date(2024, 1, 25),
         "dlp_years": 5,
     },
@@ -81,9 +102,12 @@ SEGMENTS = [
         "road_name": "Old Airport Road, Bengaluru",
         "gps_lat": 12.9789,
         "gps_lon": 77.6408,
+        "ward": "Ward 151",
+        "zone": "BBMP Road Infrastructure Zone 3",
         "contractor_name": "Sri Ranga Constructions",
         "tender_number": "BBMP/BLR/2023/RM-054",
         "responsible_officer": "Executive Engineer, BBMP Road Infrastructure Zone 3",
+        "work_period_start": date(2022, 11, 1),
         "completion_date": date(2023, 4, 10),
         "dlp_years": 3,
     },
@@ -91,9 +115,12 @@ SEGMENTS = [
         "road_name": "VIP Road (near NSCBI Airport), Kolkata",
         "gps_lat": 22.6540,
         "gps_lon": 88.4467,
+        "ward": "Ward 1",
+        "zone": "KMC",
         "contractor_name": "Bengal Roadways Pvt. Ltd.",
         "tender_number": "PWD/WB/2022/RM-089",
         "responsible_officer": "Executive Engineer, PWD Kolkata Airport Division",
+        "work_period_start": date(2022, 1, 1),
         "completion_date": date(2022, 7, 1),
         "dlp_years": 5,
     },
@@ -101,9 +128,12 @@ SEGMENTS = [
         "road_name": "Bailey Road, Patna",
         "gps_lat": 25.6127,
         "gps_lon": 85.1197,
+        "ward": "Ward 27",
+        "zone": "PMC",
         "contractor_name": "Bihar State Road Development Corp.",
         "tender_number": "PWD/BR/2023/RM-033",
         "responsible_officer": "Executive Engineer, PWD Patna Division",
+        "work_period_start": date(2022, 8, 1),
         "completion_date": date(2023, 2, 15),
         "dlp_years": 5,
     },
@@ -113,9 +143,12 @@ SEGMENTS = [
         "road_name": "Bollaram Road, Miyapur, Hyderabad",
         "gps_lat": 17.4933,
         "gps_lon": 78.3679,
+        "ward": "Ward 9",
+        "zone": "GHMC Kukatpally Circle",
         "contractor_name": "Sri Venkateswara Constructions",
         "tender_number": "GHMC/TS/2023/RM-072",
         "responsible_officer": "Executive Engineer, GHMC Kukatpally Circle",
+        "work_period_start": date(2023, 1, 1),
         "completion_date": date(2023, 6, 20),
         "dlp_years": 5,
     },
@@ -123,9 +156,12 @@ SEGMENTS = [
         "road_name": "T. Munnekollala Road, Bengaluru",
         "gps_lat": 12.9345,
         "gps_lon": 77.7186,
+        "ward": "Ward 150",
+        "zone": "BBMP Road Infrastructure Zone 5",
         "contractor_name": "GreenTech Road Infra",
         "tender_number": "BBMP/BLR/2024/RM-098",
         "responsible_officer": "Executive Engineer, BBMP Road Infrastructure Zone 5",
+        "work_period_start": date(2023, 11, 1),
         "completion_date": date(2024, 5, 1),
         "dlp_years": 3,
     },
@@ -133,9 +169,12 @@ SEGMENTS = [
         "road_name": "GS Road, Guwahati",
         "gps_lat": 26.1445,
         "gps_lon": 91.7362,
+        "ward": "Ward 22",
+        "zone": "GMC",
         "contractor_name": "Assam State Road Project Ltd.",
         "tender_number": "PWD/AS/2023/RM-045",
         "responsible_officer": "Executive Engineer, PWD Guwahati Division",
+        "work_period_start": date(2023, 3, 1),
         "completion_date": date(2023, 9, 10),
         "dlp_years": 5,
     },
