@@ -1,4 +1,4 @@
-const OPTIONS = [
+const STATUS_OPTIONS = [
   { id: 'all', label: 'All' },
   { id: 'new', label: 'New' },
   { id: 'review', label: 'Review' },
@@ -6,10 +6,10 @@ const OPTIONS = [
   { id: 'recapture', label: 'Recapture' },
 ]
 
-export function FilterChipRow({ value, onChange }) {
+export function FilterChipRow({ value, onChange, options = STATUS_OPTIONS }) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1">
-      {OPTIONS.map((opt) => {
+      {options.map((opt) => {
         const active = value === opt.id
         return (
           <button

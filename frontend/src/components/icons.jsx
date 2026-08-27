@@ -163,6 +163,14 @@ export function ShareIcon(props) {
   )
 }
 
+export function ChevronDownIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </Svg>
+  )
+}
+
 export function HeartIcon(props) {
   return (
     <Svg {...props}>
