@@ -3,10 +3,13 @@ import { Badge } from './Badge'
 import { ConfidenceRing } from './ConfidenceRing'
 import { SeverityBadge } from './SeverityBadge'
 
-export function ReportCard({ o }) {
+export function ReportCard({ o, onClick }) {
   const time = o.captured_at ? new Date(o.captured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
   return (
-    <div className="flex gap-3 bg-white rounded-xl border border-slate-200 p-3">
+    <div
+      onClick={onClick}
+      className={`flex gap-3 bg-white rounded-xl border border-slate-200 p-3 ${onClick ? 'cursor-pointer hover:border-slate-300 transition' : ''}`}
+    >
       <img src={o.image_data_url} alt={o.defect_type} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
