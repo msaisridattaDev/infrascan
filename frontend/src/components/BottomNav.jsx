@@ -1,7 +1,8 @@
-import { CameraIcon, HomeIcon } from './icons'
+import { CameraIcon, ChartIcon, HomeIcon } from './icons'
 
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
+  { id: 'home', label: 'Home', icon: HomeIcon },
+  { id: 'dashboard', label: 'Dashboard', icon: ChartIcon },
   { id: 'capture', label: 'Capture', icon: CameraIcon },
 ]
 
