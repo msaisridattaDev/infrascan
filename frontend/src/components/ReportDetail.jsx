@@ -8,8 +8,11 @@ import { EvidencePhotoCard } from './EvidencePhotoCard'
 import { ArrowLeftIcon } from './icons'
 import { LocationRow } from './LocationRow'
 import { SeverityBadge } from './SeverityBadge'
+import { useJurisdiction } from '../lib/useJurisdiction'
 
 export function ReportDetail({ observation, onBack }) {
+  const { data: jurisdiction, loading: jurisdictionLoading } = useJurisdiction(observation?.id)
+
   if (!observation) return null
   const o = observation
   const capturedAt = o.captured_at
@@ -51,8 +54,8 @@ export function ReportDetail({ observation, onBack }) {
       </div>
 
       <div className="mt-6 space-y-3">
-        <ContactActionRow />
-        <AccountabilityList />
+        <ContactActionRow jurisdiction={jurisdiction} loading={jurisdictionLoading} />
+        <AccountabilityList jurisdiction={jurisdiction} loading={jurisdictionLoading} />
       </div>
     </div>
   )

@@ -1,14 +1,19 @@
 import base64
 import hashlib
+from datetime import date
 
-from fastapi import Depends, FastAPI, File, Form, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.db import Base, engine, get_db
+from backend.db import Base, SessionLocal, engine, get_db
+from backend.geo import haversine_m
 from backend.inference import classify_defect
-from backend.models import Observation
+from backend.models import Contract, Observation, RoadSegment
+from backend.seed_data import SEGMENTS
+
+JURISDICTION_MATCH_RADIUS_M = 50
 
 app = FastAPI(title="InfraScan API")
 
@@ -23,6 +28,35 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    _seed_road_segments()
+
+
+def _seed_road_segments():
+    db = SessionLocal()
+    try:
+        if db.execute(select(RoadSegment)).first() is not None:
+            return
+        for row in SEGMENTS:
+            segment = RoadSegment(
+                road_name=row["road_name"],
+                gps_lat=row["gps_lat"],
+                gps_lon=row["gps_lon"],
+            )
+            db.add(segment)
+            db.flush()
+            db.add(
+                Contract(
+                    segment_id=segment.id,
+                    contractor_name=row["contractor_name"],
+                    tender_number=row["tender_number"],
+                    responsible_officer=row["responsible_officer"],
+                    completion_date=row["completion_date"],
+                    dlp_years=row["dlp_years"],
+                )
+            )
+        db.commit()
+    finally:
+        db.close()
 
 
 @app.get("/health")
@@ -81,6 +115,51 @@ def list_observations(db: Session = Depends(get_db)):
         select(Observation).order_by(Observation.created_at.desc())
     ).scalars()
     return [_serialize(o) for o in rows]
+
+
+@app.get("/observations/{observation_id}/jurisdiction")
+def get_jurisdiction(observation_id: str, db: Session = Depends(get_db)):
+    obs = db.get(Observation, observation_id)
+    if obs is None:
+        raise HTTPException(status_code=404, detail="observation not found")
+
+    segments = db.execute(select(RoadSegment)).scalars().all()
+    nearest = None
+    nearest_dist = None
+    for segment in segments:
+        dist = haversine_m(obs.gps_lat, obs.gps_lon, segment.gps_lat, segment.gps_lon)
+        if nearest_dist is None or dist < nearest_dist:
+            nearest, nearest_dist = segment, dist
+
+    if nearest is None or nearest_dist > JURISDICTION_MATCH_RADIUS_M:
+        return {
+            "match_confidence": "uncertain",
+            "distance_m": round(nearest_dist, 1) if nearest_dist is not None else None,
+        }
+
+    contract = db.execute(
+        select(Contract).where(Contract.segment_id == nearest.id)
+    ).scalar_one_or_none()
+    if contract is None:
+        return {"match_confidence": "uncertain", "distance_m": round(nearest_dist, 1)}
+
+    dlp_expiry = date(
+        contract.completion_date.year + contract.dlp_years,
+        contract.completion_date.month,
+        contract.completion_date.day,
+    )
+
+    return {
+        "match_confidence": "confident",
+        "distance_m": round(nearest_dist, 1),
+        "road_name": nearest.road_name,
+        "contractor_name": contract.contractor_name,
+        "tender_number": contract.tender_number,
+        "responsible_officer": contract.responsible_officer,
+        "completion_date": contract.completion_date.isoformat(),
+        "dlp_expiry": dlp_expiry.isoformat(),
+        "dlp_active": dlp_expiry >= date.today(),
+    }
 
 
 def _serialize(o: Observation) -> dict:

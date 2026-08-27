@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Float, String, Text
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, Text
 
 from backend.db import Base
 
@@ -23,3 +23,24 @@ class Observation(Base):
     status = Column(String, default="new")
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class RoadSegment(Base):
+    __tablename__ = "road_segments"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    road_name = Column(String, nullable=False)
+    gps_lat = Column(Float, nullable=False)
+    gps_lon = Column(Float, nullable=False)
+
+
+class Contract(Base):
+    __tablename__ = "contracts"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    segment_id = Column(String, ForeignKey("road_segments.id"), nullable=False, index=True)
+    contractor_name = Column(String, nullable=False)
+    tender_number = Column(String, nullable=False)
+    responsible_officer = Column(String, nullable=False)
+    completion_date = Column(Date, nullable=False)
+    dlp_years = Column(Integer, nullable=False, default=5)
