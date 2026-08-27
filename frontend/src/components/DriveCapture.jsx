@@ -257,15 +257,6 @@ export function DriveCapture() {
 
       {error && <p className="text-red-600 dark:text-red-400 text-sm mt-3">{error}</p>}
 
-      <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">
-        Every {FRAME_INTERVAL_MS / 1000}s, a real frame is captured on a timer. When your phone's motion sensor is
-        available, a sudden jerk (the kind a pothole or hard bump causes) triggers an extra capture right away,
-        using your device's real accelerometer — not a simulated detector. Every captured frame runs through the
-        same pipeline as a manual photo (dedup, classification, status routing). There's no live on-device
-        bounding-box overlay; results appear below once the backend has classified each frame. Keep this tab open
-        and the screen on while driving.
-      </p>
-
       {driving && mapCenter && (
         <div className="mt-3">
           <MapCard observations={evidence} center={mapCenter} zoom={16} height={220} showMe />

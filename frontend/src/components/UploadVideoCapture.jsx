@@ -128,12 +128,6 @@ export function UploadVideoCapture({ onSubmitted }) {
         </span>
       </label>
 
-      <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
-        We pull one frame every {FRAME_INTERVAL_S}s (up to {MAX_FRAMES} frames) and run each through the same
-        pipeline as a live capture. All frames are tagged with your current location, taken once when you pick the
-        file — not tracked from the video itself, since a video has no embedded GPS track.
-      </p>
-
       <PrimaryButton disabled={!file || !location || busy} onClick={processVideo} className="w-full">
         {status === 'locating' && 'Getting your location…'}
         {status === 'extracting' && `Extracting frames… ${progress.done}/${progress.total || '?'}`}
