@@ -1,29 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
+import { PrimaryButton } from './components/Button'
+import { HeroCTA } from './components/HeroCTA'
+import { MapCard } from './components/MapCard'
+import { MetricCard } from './components/MetricCard'
+import { ReportCard } from './components/ReportCard'
+import { SectionHeader } from './components/SectionHeader'
+import { STATUS_STYLE } from './constants'
 
 const API = import.meta.env.VITE_API_BASE_URL
-
-const SEVERITY_COLOR = {
-  high: '#dc2626',
-  medium: '#d97706',
-  low: '#16a34a',
-}
-
-const STATUS_STYLE = {
-  accepted: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  review: 'bg-amber-50 text-amber-700 border-amber-200',
-  recapture: 'bg-red-50 text-red-700 border-red-200',
-  new: 'bg-slate-50 text-slate-700 border-slate-200',
-}
-
-function Badge({ status, children }) {
-  return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${STATUS_STYLE[status] || STATUS_STYLE.new}`}>
-      {children}
-    </span>
-  )
-}
 
 function Header({ tab, setTab }) {
   return (
@@ -52,36 +36,6 @@ function Header({ tab, setTab }) {
         </nav>
       </div>
     </header>
-  )
-}
-
-function StatCard({ label, value, accent }) {
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4">
-      <p className="text-2xl font-bold text-slate-900" style={accent ? { color: accent } : undefined}>{value}</p>
-      <p className="text-xs text-slate-500 mt-0.5">{label}</p>
-    </div>
-  )
-}
-
-function ReportCard({ o }) {
-  const time = o.captured_at ? new Date(o.captured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
-  return (
-    <div className="flex gap-3 bg-white rounded-xl border border-slate-200 p-3">
-      <img src={o.image_data_url} alt={o.defect_type} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-medium text-slate-900 capitalize truncate">{o.defect_type?.replace('_', ' ')}</p>
-          <Badge status={o.status}>{o.status}</Badge>
-        </div>
-        <p className="text-xs text-slate-500 mt-0.5">
-          {Math.round(o.confidence * 100)}% confidence · {o.severity} severity
-        </p>
-        <p className="text-xs text-slate-400 mt-0.5">
-          {o.gps_lat?.toFixed(4)}, {o.gps_lon?.toFixed(4)} · {time}
-        </p>
-      </div>
-    </div>
   )
 }
 
@@ -114,15 +68,15 @@ function Dashboard() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Total Reports" value={stats.total} />
-        <StatCard label="Under Review" value={stats.review} accent="#d97706" />
-        <StatCard label="Accepted" value={stats.accepted} accent="#16a34a" />
-        <StatCard label="Avg Confidence" value={`${stats.avgConf}%`} />
+        <MetricCard label="Total Reports" value={stats.total} />
+        <MetricCard label="Under Review" value={stats.review} accent="#d97706" />
+        <MetricCard label="Accepted" value={stats.accepted} accent="#16a34a" />
+        <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="md:w-2/5 space-y-2 md:max-h-[560px] md:overflow-y-auto">
-          <p className="text-sm font-medium text-slate-500 mb-1">Recent Reports</p>
+          <SectionHeader>Recent Reports</SectionHeader>
           {loading && <p className="text-sm text-slate-400">Loading…</p>}
           {!loading && observations.length === 0 && (
             <p className="text-sm text-slate-400">No reports yet — submit one from the Capture tab.</p>
@@ -132,30 +86,8 @@ function Dashboard() {
           ))}
         </div>
 
-        <div className="md:w-3/5 rounded-xl overflow-hidden border border-slate-200" style={{ height: 560 }}>
-          <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {observations.map((o) => (
-              <CircleMarker
-                key={o.id}
-                center={[o.gps_lat, o.gps_lon]}
-                radius={9}
-                pathOptions={{
-                  color: SEVERITY_COLOR[o.severity] || '#64748b',
-                  fillColor: SEVERITY_COLOR[o.severity] || '#64748b',
-                  fillOpacity: 0.8,
-                }}
-              >
-                <Popup>
-                  <p className="font-medium capitalize">{o.defect_type?.replace('_', ' ')} — {o.severity}</p>
-                  <p>{Math.round(o.confidence * 100)}% confidence · {o.status}</p>
-                </Popup>
-              </CircleMarker>
-            ))}
-          </MapContainer>
+        <div className="md:w-3/5">
+          <MapCard observations={observations} center={center} />
         </div>
       </div>
     </div>
@@ -212,10 +144,10 @@ function Capture({ onSubmitted }) {
 
   return (
     <div className="max-w-md mx-auto px-4 py-6">
-      <div className="bg-gradient-to-br from-slate-900 to-slate-700 text-white rounded-2xl p-5 mb-5">
-        <p className="text-lg font-semibold">See a road defect?</p>
-        <p className="text-sm text-slate-300 mt-1">Snap a photo, we'll geotag it and flag it for review automatically.</p>
-      </div>
+      <HeroCTA
+        title="See a road defect?"
+        subtitle="Snap a photo, we'll geotag it and flag it for review automatically."
+      />
 
       <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 rounded-2xl p-8 mb-4 cursor-pointer bg-white hover:border-slate-400 transition">
         <input type="file" accept="image/*" capture="environment" onChange={onFileChange} className="hidden" />
@@ -229,15 +161,15 @@ function Capture({ onSubmitted }) {
         )}
       </label>
 
-      <button
+      <PrimaryButton
         disabled={!file || status === 'uploading' || status === 'locating'}
         onClick={submitReport}
-        className="w-full py-3 rounded-xl font-medium text-white bg-slate-900 disabled:bg-slate-300 transition"
+        className="w-full"
       >
         {status === 'locating' && 'Getting location…'}
         {status === 'uploading' && 'Submitting…'}
         {(status === 'idle' || status === 'done') && 'Submit Report'}
-      </button>
+      </PrimaryButton>
 
       {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
 
