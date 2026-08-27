@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.db import Base, SessionLocal, engine, get_db
+from backend.db import SessionLocal, get_db, sync_schema
 from backend.geo import haversine_m
 from backend.inference import classify_defect
 from backend.models import Contract, Observation, RoadSegment
@@ -28,7 +28,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
-    Base.metadata.create_all(bind=engine)
+    sync_schema()
     _seed_road_segments()
     _seed_observations()
 
