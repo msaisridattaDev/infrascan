@@ -220,6 +220,23 @@ export function ActivityIcon(props) {
   )
 }
 
+export function ShieldIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" />
+    </Svg>
+  )
+}
+
+export function InfoIcon(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 8h.01" />
+    </Svg>
+  )
+}
+
 export function HeartIcon(props) {
   return (
     <Svg {...props}>

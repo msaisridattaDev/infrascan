@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AccountabilityRollup } from './components/AccountabilityRollup'
 import { BottomNav } from './components/BottomNav'
 import { SecondaryButton } from './components/Button'
 import { DriveCapture } from './components/DriveCapture'
@@ -7,16 +6,18 @@ import { FilterChipRow } from './components/FilterChipRow'
 import { HeroCTA } from './components/HeroCTA'
 import { PinIcon } from './components/icons'
 import { InfoDisclosureCard } from './components/InfoDisclosureCard'
+import { LiabilityMethodology } from './components/LiabilityMethodology'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
 import { PhotoCapture } from './components/PhotoCapture'
+import { RoadWatchBreakdown } from './components/RoadWatchBreakdown'
 import { UploadVideoCapture } from './components/UploadVideoCapture'
 import { ReportCard } from './components/ReportCard'
 import { ReportDetail } from './components/ReportDetail'
 import { SectionHeader } from './components/SectionHeader'
 import { ThemeToggle } from './components/ThemeToggle'
 import { getDeviceId, resetDeviceId } from './lib/deviceId'
-import { useAccountabilityRollup } from './lib/useAccountabilityRollup'
+import { useAccountability } from './lib/useAccountability'
 import { findNearby, withAgeAndRepeat } from './lib/reportStats'
 import { useDarkMode } from './lib/useDarkMode'
 
@@ -88,13 +89,22 @@ function Home({ observations, onSubmitted }) {
   )
 }
 
+const LIABILITY_OPTIONS = [
+  { id: 'all', label: 'All' },
+  { id: 'attributed', label: 'Attributed' },
+  { id: 'unattributed', label: 'Unattributed' },
+  { id: 'contractor_liable', label: 'Contractor-liable' },
+  { id: 'corporation_liable', label: 'Corporation-liable' },
+]
+
 function Explore({ observations, loading, onSelect }) {
   const [statusFilter, setStatusFilter] = useState('all')
+  const [liabilityFilter, setLiabilityFilter] = useState('all')
   const [myLocation, setMyLocation] = useState(null)
   const [radiusKm, setRadiusKm] = useState('all')
   const [locating, setLocating] = useState(false)
 
-  const { rollup, loading: rollupLoading } = useAccountabilityRollup(observations)
+  const { perObservation, byWard, byContractor, byOfficer, loading: accLoading } = useAccountability(observations)
 
   function useMyLocation() {
     setLocating(true)
@@ -121,10 +131,22 @@ function Explore({ observations, loading, onSelect }) {
     [observations, statusFilter]
   )
 
-  const filteredObservations = useMemo(() => {
+  const nearbyFiltered = useMemo(() => {
     if (!myLocation || radiusKm === 'all') return statusFiltered
     return findNearby(statusFiltered, myLocation.lat, myLocation.lon, Number(radiusKm) * 1000)
   }, [statusFiltered, myLocation, radiusKm])
+
+  const filteredObservations = useMemo(() => {
+    if (liabilityFilter === 'all') return nearbyFiltered
+    return nearbyFiltered.filter((o) => {
+      const j = perObservation.get(o.id)
+      if (liabilityFilter === 'attributed') return j?.match_confidence === 'confident'
+      if (liabilityFilter === 'unattributed') return !j || j.match_confidence !== 'confident'
+      if (liabilityFilter === 'contractor_liable') return j?.liability_status === 'in_warranty'
+      if (liabilityFilter === 'corporation_liable') return j?.liability_status === 'expired'
+      return true
+    })
+  }, [nearbyFiltered, liabilityFilter, perObservation])
 
   const center = myLocation
     ? [myLocation.lat, myLocation.lon]
@@ -183,6 +205,10 @@ function Explore({ observations, loading, onSelect }) {
         <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
       </div>
 
+      <div className="mb-3">
+        <FilterChipRow value={liabilityFilter} onChange={setLiabilityFilter} options={LIABILITY_OPTIONS} />
+      </div>
+
       <div className="flex flex-col md:flex-row gap-4">
         <div className="md:w-2/5 space-y-2 md:max-h-[560px] md:overflow-y-auto">
           <SectionHeader>Recent Reports</SectionHeader>
@@ -205,7 +231,9 @@ function Explore({ observations, loading, onSelect }) {
             cluster
             radiusCircle={myLocation && radiusKm !== 'all' ? { center, radiusM: Number(radiusKm) * 1000 } : null}
           />
-          <AccountabilityRollup rollup={rollup} loading={rollupLoading} />
+          <div className="mt-4">
+            <RoadWatchBreakdown byWard={byWard} byContractor={byContractor} byOfficer={byOfficer} loading={accLoading} />
+          </div>
         </div>
       </div>
     </div>
@@ -233,9 +261,9 @@ function MyReports({ observations, loading, onSelect }) {
   )
 }
 
-function Me({ observations }) {
+function RoadWatch({ observations, loading }) {
   const [deviceId, setDeviceId] = useState(() => getDeviceId())
-  const myCount = useMemo(() => observations.filter((o) => o.device_id === deviceId).length, [observations, deviceId])
+  const { summary, byWard, byContractor, byOfficer, loading: accLoading } = useAccountability(observations)
 
   function handleReset() {
     resetDeviceId()
@@ -243,24 +271,39 @@ function Me({ observations }) {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-6">
-      <SectionHeader>Me</SectionHeader>
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">This device</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-all font-mono">{deviceId}</p>
-        <p className="text-sm text-slate-600 dark:text-slate-300 mt-3">{myCount} report{myCount === 1 ? '' : 's'} from this device</p>
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      <SectionHeader>RoadWatch</SectionHeader>
+      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Defect liability exposure</h1>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        Where a contract is still under warranty, the repair is the contractor's obligation. Everything else falls to
+        the corporation.
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 mb-6">
+        <MetricCard label="Open defects" value={loading || accLoading ? '—' : summary.openDefects} />
+        <MetricCard label="Attributed to a contract" value={loading || accLoading ? '—' : summary.attributed} />
+        <MetricCard label="In liability period" value={loading || accLoading ? '—' : summary.inWarranty} accent="#16a34a" />
+        <MetricCard label="Corporation's own cost" value={loading || accLoading ? '—' : summary.corporationLiable} accent="#d97706" />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          InfraScan doesn't use accounts or logins — reports are tied to this browser only, not to you personally.
+      <div className="mb-4">
+        <RoadWatchBreakdown byWard={byWard} byContractor={byContractor} byOfficer={byOfficer} loading={loading || accLoading} />
+      </div>
+
+      <div className="mb-4">
+        <LiabilityMethodology />
+      </div>
+
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">This device</p>
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 break-all font-mono">{deviceId}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+          InfraScan doesn't use accounts or logins — your reports are tied to this browser only, findable under My
+          Reports.
         </p>
-      </div>
-
-      <div className="mt-4">
-        <SecondaryButton className="w-full" onClick={handleReset}>
-          Reset this device's identity
-        </SecondaryButton>
+        <div className="mt-3">
+          <SecondaryButton onClick={handleReset}>Reset this device's identity</SecondaryButton>
+        </div>
       </div>
     </div>
   )
@@ -315,7 +358,7 @@ function App() {
         ) : tab === 'reports' ? (
           <MyReports observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
         ) : (
-          <Me observations={observations} />
+          <RoadWatch observations={observations} loading={loading} />
         )}
       </div>
       <BottomNav tab={tab} setTab={selectTab} />

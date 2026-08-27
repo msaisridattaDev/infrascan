@@ -32,6 +32,8 @@ class RoadSegment(Base):
     road_name = Column(String, nullable=False)
     gps_lat = Column(Float, nullable=False)
     gps_lon = Column(Float, nullable=False)
+    ward = Column(String, nullable=True)
+    zone = Column(String, nullable=True)
 
 
 class Contract(Base):
@@ -42,5 +44,6 @@ class Contract(Base):
     contractor_name = Column(String, nullable=False)
     tender_number = Column(String, nullable=False)
     responsible_officer = Column(String, nullable=False)
+    work_period_start = Column(Date, nullable=True)
     completion_date = Column(Date, nullable=False)
     dlp_years = Column(Integer, nullable=False, default=5)
