@@ -5,6 +5,7 @@ import { HeroCTA } from './components/HeroCTA'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
 import { ReportCard } from './components/ReportCard'
+import { ReportDetail } from './components/ReportDetail'
 import { SectionHeader } from './components/SectionHeader'
 import { STATUS_STYLE } from './constants'
 import { withAgeAndRepeat } from './lib/reportStats'
@@ -25,20 +26,7 @@ function Header() {
   )
 }
 
-function Dashboard() {
-  const [observations, setObservations] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch(`${API}/observations`)
-      .then((res) => res.json())
-      .then((data) => {
-        setObservations(data)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
-
+function Dashboard({ observations, loading, onSelect }) {
   const stats = useMemo(() => {
     const total = observations.length
     const review = observations.filter((o) => o.status === 'review').length
@@ -46,8 +34,6 @@ function Dashboard() {
     const avgConf = total ? Math.round((observations.reduce((s, o) => s + o.confidence, 0) / total) * 100) : 0
     return { total, review, accepted, avgConf }
   }, [observations])
-
-  const enrichedObservations = useMemo(() => withAgeAndRepeat(observations), [observations])
 
   const center = observations.length
     ? [observations[0].gps_lat, observations[0].gps_lon]
@@ -69,8 +55,8 @@ function Dashboard() {
           {!loading && observations.length === 0 && (
             <p className="text-sm text-slate-400">No reports yet — submit one from the Capture tab.</p>
           )}
-          {enrichedObservations.map((o) => (
-            <ReportCard key={o.id} o={o} />
+          {observations.map((o) => (
+            <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
           ))}
         </div>
 
@@ -175,14 +161,51 @@ function Capture({ onSubmitted }) {
 
 function App() {
   const [tab, setTab] = useState('dashboard')
+  const [observations, setObservations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedId, setSelectedId] = useState(null)
+
+  function fetchObservations() {
+    setLoading(true)
+    fetch(`${API}/observations`)
+      .then((res) => res.json())
+      .then((data) => {
+        setObservations(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchObservations()
+  }, [])
+
+  const enrichedObservations = useMemo(() => withAgeAndRepeat(observations), [observations])
+  const selected = enrichedObservations.find((o) => o.id === selectedId) || null
+
+  function selectTab(t) {
+    setSelectedId(null)
+    setTab(t)
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
       <div className="pb-16">
-        {tab === 'dashboard' ? <Dashboard /> : <Capture onSubmitted={() => setTab('dashboard')} />}
+        {selected ? (
+          <ReportDetail observation={selected} onBack={() => setSelectedId(null)} />
+        ) : tab === 'dashboard' ? (
+          <Dashboard observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
+        ) : (
+          <Capture
+            onSubmitted={() => {
+              fetchObservations()
+              selectTab('dashboard')
+            }}
+          />
+        )}
       </div>
-      <BottomNav tab={tab} setTab={setTab} />
+      <BottomNav tab={tab} setTab={selectTab} />
     </div>
   )
 }
