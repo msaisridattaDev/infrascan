@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { BottomNav } from './components/BottomNav'
 import { PrimaryButton } from './components/Button'
 import { HeroCTA } from './components/HeroCTA'
 import { MapCard } from './components/MapCard'
@@ -9,31 +10,15 @@ import { STATUS_STYLE } from './constants'
 
 const API = import.meta.env.VITE_API_BASE_URL
 
-function Header({ tab, setTab }) {
+function Header() {
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-slate-200">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">IS</div>
-          <div>
-            <p className="font-semibold text-slate-900 leading-tight">InfraScan</p>
-            <p className="text-xs text-slate-500 leading-tight">Road Defect Detection</p>
-          </div>
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">IS</div>
+        <div>
+          <p className="font-semibold text-slate-900 leading-tight">InfraScan</p>
+          <p className="text-xs text-slate-500 leading-tight">Road Defect Detection</p>
         </div>
-        <nav className="flex gap-1 bg-slate-100 rounded-lg p-1">
-          <button
-            onClick={() => setTab('dashboard')}
-            className={`px-3 py-1.5 text-sm rounded-md font-medium transition ${tab === 'dashboard' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => setTab('capture')}
-            className={`px-3 py-1.5 text-sm rounded-md font-medium transition ${tab === 'capture' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}
-          >
-            Capture
-          </button>
-        </nav>
       </div>
     </header>
   )
@@ -190,8 +175,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header tab={tab} setTab={setTab} />
-      {tab === 'dashboard' ? <Dashboard /> : <Capture onSubmitted={() => setTab('dashboard')} />}
+      <Header />
+      <div className="pb-16">
+        {tab === 'dashboard' ? <Dashboard /> : <Capture onSubmitted={() => setTab('dashboard')} />}
+      </div>
+      <BottomNav tab={tab} setTab={setTab} />
     </div>
   )
 }
