@@ -1,9 +1,10 @@
-import { CameraIcon, ChartIcon, HomeIcon } from './icons'
+import { ClipboardListIcon, CompassIcon, HomeIcon, UserIcon } from './icons'
 
 const TABS = [
   { id: 'home', label: 'Home', icon: HomeIcon },
-  { id: 'dashboard', label: 'Dashboard', icon: ChartIcon },
-  { id: 'capture', label: 'Capture', icon: CameraIcon },
+  { id: 'explore', label: 'Explore', icon: CompassIcon },
+  { id: 'reports', label: 'My Reports', icon: ClipboardListIcon },
+  { id: 'me', label: 'Me', icon: UserIcon },
 ]
 
 export function BottomNav({ tab, setTab }) {
