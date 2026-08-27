@@ -1,5 +1,6 @@
 import { AgeRepeatBadge } from './AgeRepeatBadge'
 import { Badge } from './Badge'
+import { ConfidenceRing } from './ConfidenceRing'
 import { SeverityBadge } from './SeverityBadge'
 
 export function ReportCard({ o }) {
@@ -12,9 +13,9 @@ export function ReportCard({ o }) {
           <p className="font-medium text-slate-900 capitalize truncate">{o.defect_type?.replace('_', ' ')}</p>
           <Badge status={o.status}>{o.status}</Badge>
         </div>
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex items-center justify-between gap-2 mt-1">
           <SeverityBadge severity={o.severity} />
-          <span className="text-xs text-slate-500">{Math.round(o.confidence * 100)}% confidence</span>
+          <ConfidenceRing confidence={o.confidence} />
         </div>
         <p className="text-xs text-slate-400 mt-1">
           {o.gps_lat?.toFixed(4)}, {o.gps_lon?.toFixed(4)} · {time}
