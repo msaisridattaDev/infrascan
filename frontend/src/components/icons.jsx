@@ -77,3 +77,14 @@ export function ArrowLeftIcon(props) {
     </Svg>
   )
 }
+
+export function ChartIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M3 3v18h18" />
+      <rect x="7" y="12" width="3" height="6" />
+      <rect x="12.5" y="8" width="3" height="10" />
+      <rect x="18" y="5" width="3" height="13" />
+    </Svg>
+  )
+}

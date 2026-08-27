@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ActionTileGrid } from './components/ActionTile'
 import { BottomNav } from './components/BottomNav'
 import { PrimaryButton } from './components/Button'
+import { CameraIcon, ChartIcon } from './components/icons'
 import { HeroCTA } from './components/HeroCTA'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
@@ -23,6 +25,37 @@ function Header() {
         </div>
       </div>
     </header>
+  )
+}
+
+function Home({ observations, loading, onSelect, onNavigate }) {
+  const recent = observations.slice(0, 3)
+
+  return (
+    <div className="max-w-md mx-auto px-4 py-6">
+      <HeroCTA
+        title="See a road defect?"
+        subtitle="Snap a photo, we'll geotag it and flag it for review automatically."
+      />
+
+      <ActionTileGrid
+        tiles={[
+          { icon: CameraIcon, label: 'Capture', onClick: () => onNavigate('capture') },
+          { icon: ChartIcon, label: 'Dashboard', onClick: () => onNavigate('dashboard') },
+        ]}
+      />
+
+      <div className="mt-6 space-y-2">
+        <SectionHeader>Recent</SectionHeader>
+        {loading && <p className="text-sm text-slate-400">Loading…</p>}
+        {!loading && recent.length === 0 && (
+          <p className="text-sm text-slate-400">No reports yet — submit one from Capture.</p>
+        )}
+        {recent.map((o) => (
+          <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -160,7 +193,7 @@ function Capture({ onSubmitted }) {
 }
 
 function App() {
-  const [tab, setTab] = useState('dashboard')
+  const [tab, setTab] = useState('home')
   const [observations, setObservations] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
@@ -194,6 +227,13 @@ function App() {
       <div className="pb-16">
         {selected ? (
           <ReportDetail observation={selected} onBack={() => setSelectedId(null)} />
+        ) : tab === 'home' ? (
+          <Home
+            observations={enrichedObservations}
+            loading={loading}
+            onSelect={setSelectedId}
+            onNavigate={selectTab}
+          />
         ) : tab === 'dashboard' ? (
           <Dashboard observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
         ) : (
