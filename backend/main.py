@@ -16,7 +16,7 @@ from backend.seed_observations import OBSERVATIONS
 
 JURISDICTION_MATCH_RADIUS_M = 50
 
-app = FastAPI(title="InfraScan API")
+app = FastAPI(title="StreetLens API")
 
 app.add_middleware(
     CORSMiddleware,

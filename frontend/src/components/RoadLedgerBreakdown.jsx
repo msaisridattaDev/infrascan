@@ -8,7 +8,7 @@ const VIEWS = [
 
 const COLUMN_LABEL = { ward: 'Ward / zone', contractor: 'Contractor', officer: 'Officer' }
 
-export function RoadWatchBreakdown({ byWard, byContractor, byOfficer, loading }) {
+export function RoadLedgerBreakdown({ byWard, byContractor, byOfficer, loading }) {
   const [view, setView] = useState('ward')
   const rows = { ward: byWard, contractor: byContractor, officer: byOfficer }[view]
 
@@ -19,7 +19,7 @@ export function RoadWatchBreakdown({ byWard, byContractor, byOfficer, loading })
           <button
             key={v.id}
             onClick={() => setView(v.id)}
-            className={`flex-1 py-1.5 text-xs sm:text-sm rounded-md font-medium transition ${view === v.id ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
+            className={`flex-1 py-1.5 text-xs sm:text-sm rounded-md font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 dark:focus-visible:ring-slate-300/30 ${view === v.id ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
           >
             {v.label}
           </button>

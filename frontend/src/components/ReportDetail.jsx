@@ -23,7 +23,7 @@ export function ReportDetail({ observation, onBack }) {
     : ''
 
   return (
-    <div className="max-w-md mx-auto px-4 py-6">
+    <div className="max-w-lg md:max-w-2xl mx-auto px-4 py-6">
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
         <ArrowLeftIcon className="w-4 h-4" />
         Back

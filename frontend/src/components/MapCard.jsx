@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { APIProvider, Map } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps'
 import { DensityMarkers, MeMarker, ObservationMarkers, RadiusCircle } from './GoogleMapPrimitives'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
@@ -35,6 +35,31 @@ const DARK_MAP_STYLE = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0f1826' }] },
 ]
 
+// Google Maps' `center`/`zoom` props are "controlled" — passing them fresh on every render (as a
+// literal center/zoom, not synced from onCameraChanged) makes the library snap the camera back to
+// those exact values on every re-render, fighting the user's own pinch-zoom/pan mid-gesture. Using
+// `defaultCenter`/`defaultZoom` instead makes the map own its camera after the first paint, and
+// this controller only moves it imperatively when the center/zoom *props* actually change (a new
+// geolocation fix, a live GPS tick, an explicit recenter) — never as a side effect of an unrelated
+// parent re-render.
+function CameraController({ center, zoom }) {
+  const map = useMap()
+  const lat = center?.[0]
+  const lon = center?.[1]
+
+  useEffect(() => {
+    if (!map || lat == null || lon == null) return
+    map.panTo({ lat, lng: lon })
+  }, [map, lat, lon])
+
+  useEffect(() => {
+    if (!map || zoom == null) return
+    map.setZoom(zoom)
+  }, [map, zoom])
+
+  return null
+}
+
 function NoKeyFallback({ height }) {
   return (
     <div
@@ -67,14 +92,19 @@ export function MapCard({
     <div className={rounded ? 'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700' : ''} style={{ height }}>
       <APIProvider apiKey={API_KEY}>
         <Map
-          center={{ lat: center[0], lng: center[1] }}
-          zoom={zoom}
+          defaultCenter={{ lat: center[0], lng: center[1] }}
+          defaultZoom={zoom}
+          minZoom={3}
+          maxZoom={20}
           style={{ width: '100%', height: '100%' }}
           gestureHandling="greedy"
           disableDefaultUI={false}
           zoomControl
+          fullscreenControl={false}
+          streetViewControl={false}
           styles={dark ? DARK_MAP_STYLE : undefined}
         >
+          <CameraController center={center} zoom={zoom} />
           {densityPoints && <DensityMarkers points={densityPoints} />}
           <ObservationMarkers observations={observations} cluster={cluster} />
           {showMe && center && <MeMarker center={center} />}
