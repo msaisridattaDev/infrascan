@@ -56,7 +56,7 @@ export function ReportDetail({ observation, onBack }) {
       </div>
 
       <div className="mt-4">
-        <LocationRow lat={o.gps_lat} lon={o.gps_lon} />
+        <LocationRow lat={o.gps_lat} lon={o.gps_lon} observation={o} showMap />
       </div>
 
       <div className="mt-6 space-y-3">

@@ -203,6 +203,23 @@ export function StopIcon(props) {
   )
 }
 
+export function UploadIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M12 16V4M12 4 7 9M12 4l5 5" />
+      <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+    </Svg>
+  )
+}
+
+export function ActivityIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M2 12h4l2.5-7 4 14 2.5-7H22" />
+    </Svg>
+  )
+}
+
 export function HeartIcon(props) {
   return (
     <Svg {...props}>

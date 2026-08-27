@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { buildReportSummary } from '../lib/reportSummary'
+import { buildReportSummary, buildTweetSummary } from '../lib/reportSummary'
 import { CopyIcon, MailIcon, ShareIcon, XIcon } from './icons'
 
 export function ContactActionRow({ observation, jurisdiction, loading }) {
@@ -30,7 +30,7 @@ export function ContactActionRow({ observation, jurisdiction, loading }) {
     navigator.share?.({ text: summary }).catch(() => {})
   }
 
-  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(summary)}`
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(buildTweetSummary(observation, jurisdiction))}`
   const mailtoUrl = `mailto:?subject=${encodeURIComponent(`Road defect report — ${jurisdiction.road_name}`)}&body=${encodeURIComponent(summary)}`
 
   const actions = [
@@ -45,6 +45,14 @@ export function ContactActionRow({ observation, jurisdiction, loading }) {
       <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Take action</p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
         This report falls within {jurisdiction.responsible_officer}'s jurisdiction ({jurisdiction.road_name}).
+      </p>
+
+      <pre className="mt-3 whitespace-pre-wrap font-sans text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 max-h-40 overflow-y-auto">
+        {summary}
+      </pre>
+      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+        Auto-drafted from this report's data — not written by a person, and not sent anywhere on its own. Review it,
+        then copy, share, post, or email it yourself.
       </p>
 
       <div className="flex gap-4 mt-3">
