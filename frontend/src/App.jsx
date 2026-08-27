@@ -285,6 +285,16 @@ function RoadLedger({ observations, loading }) {
               <SecondaryButton onClick={handleReset}>Reset this device's identity</SecondaryButton>
             </div>
           </div>
+
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">Privacy &amp; data</p>
+            <ul className="text-xs text-slate-500 dark:text-slate-400 mt-2 space-y-1.5 list-disc pl-4">
+              <li>A photo, GPS coordinates, and timestamp are sent to the server when you submit a report.</li>
+              <li>No accounts, names, or emails are collected — reports are tied only to a random id stored in this browser.</li>
+              <li>Comments and "support" taps are stored on this device only and are never sent anywhere.</li>
+              <li>This is a preview build: data may be reset or cleared at any time without notice.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
