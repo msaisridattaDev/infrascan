@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 
-const STORAGE_KEY = 'infrascan-theme'
+const STORAGE_KEY = 'streetlens-theme'
 
+// Defaults to light regardless of system preference — only an explicit toggle switches it,
+// stored from then on.
 function getInitialTheme() {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored === 'dark' || stored === 'light') return stored
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'light'
 }
 
 export function useDarkMode() {
