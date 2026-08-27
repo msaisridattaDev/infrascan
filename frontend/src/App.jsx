@@ -10,7 +10,7 @@ import { LiabilityMethodology } from './components/LiabilityMethodology'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
 import { PhotoCapture } from './components/PhotoCapture'
-import { RoadWatchBreakdown } from './components/RoadWatchBreakdown'
+import { RoadLedgerBreakdown } from './components/RoadLedgerBreakdown'
 import { UploadVideoCapture } from './components/UploadVideoCapture'
 import { ReportCard } from './components/ReportCard'
 import { ReportDetail } from './components/ReportDetail'
@@ -25,17 +25,41 @@ import { useDarkMode } from './lib/useDarkMode'
 
 const API = import.meta.env.VITE_API_BASE_URL
 
-function Header({ theme, onToggleTheme }) {
+const NAV_TABS = [
+  { id: 'home', label: 'Home' },
+  { id: 'explore', label: 'Explore' },
+  { id: 'reports', label: 'My Reports' },
+  { id: 'ledger', label: 'RoadLedger' },
+]
+
+function Header({ theme, onToggleTheme, tab, setTab }) {
   return (
     <header className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-sm">IS</div>
+          <div className="w-9 h-9 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-sm">SL</div>
           <div>
-            <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight">InfraScan</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight">Road Defect Detection</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight">StreetLens</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight hidden sm:block">Road Defect Detection</p>
           </div>
         </div>
+
+        <nav className="hidden md:flex items-center gap-1">
+          {NAV_TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 dark:focus-visible:ring-slate-300/30 ${
+                tab === t.id
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
     </header>
@@ -59,7 +83,7 @@ function Home({ observations, onSubmitted }) {
 
   return (
     <div>
-      <div className="max-w-md mx-auto px-4 pt-6">
+      <div className="max-w-md md:max-w-xl mx-auto px-4 pt-6">
         <HeroCTA title="See a road defect?" subtitle={HOME_SUBTITLES[mode]} />
 
         <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mb-4">
@@ -67,7 +91,7 @@ function Home({ observations, onSubmitted }) {
             <button
               key={m.id}
               onClick={() => setMode(m.id)}
-              className={`flex-1 py-1.5 text-xs sm:text-sm rounded-md font-medium transition ${mode === m.id ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
+              className={`flex-1 py-1.5 text-xs sm:text-sm rounded-md font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 dark:focus-visible:ring-slate-300/30 ${mode === m.id ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
             >
               {m.label}
             </button>
@@ -146,7 +170,8 @@ function Explore({ observations, loading, onSelect }) {
         <button
           onClick={requestLocation}
           disabled={locating}
-          className="absolute bottom-4 right-4 w-11 h-11 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+          aria-label="Center on my location"
+          className="absolute bottom-4 right-4 w-11 h-11 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 dark:focus-visible:ring-slate-300/30"
         >
           <PinIcon className={`w-5 h-5 text-slate-600 dark:text-slate-300 ${locating ? 'animate-pulse' : ''}`} />
         </button>
@@ -187,13 +212,13 @@ function MyReports({ observations, loading, onSelect }) {
   const mine = useMemo(() => observations.filter((o) => MY_REPORTS_DEMO_TAGS.includes(o.demo_tag)), [observations])
 
   return (
-    <div className="max-w-md mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
       <SectionHeader>My Reports</SectionHeader>
       {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
       {!loading && mine.length === 0 && (
         <p className="text-sm text-slate-400 dark:text-slate-500">No reports yet.</p>
       )}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {mine.map((o) => (
           <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
         ))}
@@ -202,7 +227,7 @@ function MyReports({ observations, loading, onSelect }) {
   )
 }
 
-function RoadWatch({ observations, loading }) {
+function RoadLedger({ observations, loading }) {
   const [deviceId, setDeviceId] = useState(() => getDeviceId())
   const { summary, byWard, byContractor, byOfficer, loading: accLoading } = useAccountability(observations)
   const { data: coverage, loading: coverageLoading } = useCoverage()
@@ -213,52 +238,53 @@ function RoadWatch({ observations, loading }) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <SectionHeader>RoadWatch</SectionHeader>
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <SectionHeader>RoadLedger</SectionHeader>
       <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Defect liability exposure</h1>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
         Where a contract is still under warranty, the repair is the contractor's obligation. Everything else falls to
         the corporation.
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 mb-6">
         <MetricCard label="Open defects" value={loading || accLoading ? '—' : summary.openDefects} />
         <MetricCard label="Attributed to a contract" value={loading || accLoading ? '—' : summary.attributed} />
         <MetricCard label="In liability period" value={loading || accLoading ? '—' : summary.inWarranty} accent="#16a34a" />
         <MetricCard label="Corporation's own cost" value={loading || accLoading ? '—' : summary.corporationLiable} accent="#d97706" />
       </div>
 
-      <div className="mb-4">
-        <RoadWatchBreakdown byWard={byWard} byContractor={byContractor} byOfficer={byOfficer} loading={loading || accLoading} />
-      </div>
-
-      <div className="mb-4">
-        <SectionHeader>Data coverage</SectionHeader>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <MetricCard label="Road segments mapped" value={coverageLoading ? '—' : coverage?.segments_mapped ?? 0} />
-          <MetricCard label="Segments with ward on file" value={coverageLoading ? '—' : coverage?.segments_with_ward ?? 0} />
-          <MetricCard label="Wards covered" value={coverageLoading ? '—' : coverage?.wards_covered ?? 0} />
-          <MetricCard label="Contracts on file" value={coverageLoading ? '—' : coverage?.contracts_on_file ?? 0} />
+      <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 items-start">
+        <div className="space-y-4">
+          <RoadLedgerBreakdown byWard={byWard} byContractor={byContractor} byOfficer={byOfficer} loading={loading || accLoading} />
+          <LiabilityMethodology />
         </div>
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
-          These are the roads and contracts InfraScan can currently match reports against — not every road in the
-          city has been mapped yet.
-        </p>
-      </div>
 
-      <div className="mb-4">
-        <LiabilityMethodology />
-      </div>
+        <div className="space-y-4">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+            <SectionHeader>Data coverage</SectionHeader>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <MetricCard label="Road segments mapped" value={coverageLoading ? '—' : coverage?.segments_mapped ?? 0} />
+              <MetricCard label="Segments with ward on file" value={coverageLoading ? '—' : coverage?.segments_with_ward ?? 0} />
+              <MetricCard label="Wards covered" value={coverageLoading ? '—' : coverage?.wards_covered ?? 0} />
+              <MetricCard label="Contracts on file" value={coverageLoading ? '—' : coverage?.contracts_on_file ?? 0} />
+            </div>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-3">
+              These are the roads and contracts StreetLens can currently match reports against — not every road in
+              the city has been mapped yet.
+            </p>
+          </div>
 
-      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">This device</p>
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 break-all font-mono">{deviceId}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-          InfraScan doesn't use accounts or logins — your reports are tied to this browser only, findable under My
-          Reports.
-        </p>
-        <div className="mt-3">
-          <SecondaryButton onClick={handleReset}>Reset this device's identity</SecondaryButton>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">This device</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 break-all font-mono">{deviceId}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              StreetLens doesn't use accounts or logins — your reports are tied to this browser only, findable under
+              My Reports.
+            </p>
+            <div className="mt-3">
+              <SecondaryButton onClick={handleReset}>Reset this device's identity</SecondaryButton>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -297,8 +323,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <Header theme={theme} onToggleTheme={toggleTheme} />
-      <div className="pb-16">
+      <Header theme={theme} onToggleTheme={toggleTheme} tab={tab} setTab={selectTab} />
+      <div className="pb-16 md:pb-6">
         {selected ? (
           <ReportDetail observation={selected} onBack={() => setSelectedId(null)} />
         ) : tab === 'home' ? (
@@ -314,7 +340,7 @@ function App() {
         ) : tab === 'reports' ? (
           <MyReports observations={enrichedObservations} loading={loading} onSelect={setSelectedId} />
         ) : (
-          <RoadWatch observations={observations} loading={loading} />
+          <RoadLedger observations={observations} loading={loading} />
         )}
       </div>
       <BottomNav tab={tab} setTab={selectTab} />

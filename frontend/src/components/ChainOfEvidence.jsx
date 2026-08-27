@@ -13,7 +13,7 @@ function Step({ title, detail }) {
   )
 }
 
-// A record of what InfraScan actually did to produce this report — every line here maps to a
+// A record of what StreetLens actually did to produce this report — every line here maps to a
 // real field on the observation or a real backend call, not a simulated pipeline. Archive entries
 // (seeded from real photographs, device_id is null) are labeled as such rather than implying they
 // went through live capture.
@@ -32,7 +32,7 @@ export function ChainOfEvidence({ observation: o, jurisdiction }) {
         detail={
           isArchive
             ? `Archive entry — a real, freely-licensed photograph of this road defect, dated ${capturedAt}.`
-            : `Captured via InfraScan (photo, drive, or video upload) at ${capturedAt}.`
+            : `Captured via StreetLens (photo, drive, or video upload) at ${capturedAt}.`
         }
       />
       <Step
@@ -44,7 +44,7 @@ export function ChainOfEvidence({ observation: o, jurisdiction }) {
         detail={
           isArchive
             ? `Defect type and severity set from the source photograph, not run through the live classifier.`
-            : `InfraScan's Tier-2 classifier (currently a placeholder pending a real vision model) returned ${o.defect_type?.replace('_', ' ')}, ${o.severity} severity, ${Math.round(o.confidence * 100)}% confidence.`
+            : `StreetLens's Tier-2 classifier (currently a placeholder pending a real vision model) returned ${o.defect_type?.replace('_', ' ')}, ${o.severity} severity, ${Math.round(o.confidence * 100)}% confidence.`
         }
       />
       {jurisdiction && jurisdiction.match_confidence === 'confident' ? (

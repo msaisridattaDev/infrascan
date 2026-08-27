@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getDeviceId } from '../lib/deviceId'
 import { haversineMeters } from '../lib/geo'
-import { PrimaryButton } from './Button'
+import { PrimaryButton, SecondaryButton } from './Button'
 import { ActivityIcon, CameraIcon, PlayIcon, StopIcon } from './icons'
 import { MapCard } from './MapCard'
 import { ReportCard } from './ReportCard'
@@ -244,12 +244,9 @@ export function DriveCapture() {
           {driving ? 'Stop drive' : 'Start drive'}
         </PrimaryButton>
         {driving && (
-          <button
-            onClick={() => captureFrame('manual')}
-            className="px-4 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition"
-          >
+          <SecondaryButton onClick={() => captureFrame('manual')} className="px-4">
             Capture now
-          </button>
+          </SecondaryButton>
         )}
       </div>
 

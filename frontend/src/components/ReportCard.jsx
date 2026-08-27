@@ -21,7 +21,14 @@ export function ReportCard({ o, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`flex gap-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 ${onClick ? 'cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition' : ''}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onClick()) : undefined}
+      className={`flex gap-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 ${
+        onClick
+          ? 'cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 dark:focus-visible:ring-slate-300/30'
+          : ''
+      }`}
     >
       <img src={o.image_data_url} alt={roadName} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
 
