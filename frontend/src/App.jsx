@@ -4,6 +4,7 @@ import { SecondaryButton } from './components/Button'
 import { DriveCapture } from './components/DriveCapture'
 import { FilterChipRow } from './components/FilterChipRow'
 import { HeroCTA } from './components/HeroCTA'
+import { HomeDemo } from './components/HomeDemo'
 import { PinIcon } from './components/icons'
 import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { LiabilityMethodology } from './components/LiabilityMethodology'
@@ -57,26 +58,32 @@ function Home({ observations, onSubmitted }) {
   const [mode, setMode] = useState('drive')
 
   return (
-    <div className="max-w-md mx-auto px-4 py-6">
-      <HeroCTA title="See a road defect?" subtitle={HOME_SUBTITLES[mode]} />
+    <div>
+      <div className="max-w-md mx-auto px-4 pt-6">
+        <HeroCTA title="See a road defect?" subtitle={HOME_SUBTITLES[mode]} />
 
-      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mb-4">
-        {HOME_MODES.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setMode(m.id)}
-            className={`flex-1 py-1.5 text-xs sm:text-sm rounded-md font-medium transition ${mode === m.id ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
-          >
-            {m.label}
-          </button>
-        ))}
+        <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mb-4">
+          {HOME_MODES.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              className={`flex-1 py-1.5 text-xs sm:text-sm rounded-md font-medium transition ${mode === m.id ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'drive' && <DriveCapture />}
+        {mode === 'video' && <UploadVideoCapture onSubmitted={onSubmitted} />}
+        {mode === 'photo' && <PhotoCapture observations={observations} onSubmitted={onSubmitted} />}
       </div>
 
-      {mode === 'drive' && <DriveCapture />}
-      {mode === 'video' && <UploadVideoCapture onSubmitted={onSubmitted} />}
-      {mode === 'photo' && <PhotoCapture observations={observations} onSubmitted={onSubmitted} />}
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <HomeDemo />
+      </div>
 
-      <div className="mt-6">
+      <div className="max-w-md mx-auto px-4 pb-6">
         <InfoDisclosureCard />
       </div>
     </div>
