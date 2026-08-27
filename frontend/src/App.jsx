@@ -5,6 +5,7 @@ import { PrimaryButton } from './components/Button'
 import { FilterChipRow } from './components/FilterChipRow'
 import { CameraIcon, ChartIcon } from './components/icons'
 import { HeroCTA } from './components/HeroCTA'
+import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
 import { NearbyReportsList } from './components/NearbyReportsList'
@@ -56,6 +57,10 @@ function Home({ observations, loading, onSelect, onNavigate }) {
         {recent.map((o) => (
           <ReportCard key={o.id} o={o} onClick={() => onSelect(o.id)} />
         ))}
+      </div>
+
+      <div className="mt-6">
+        <InfoDisclosureCard />
       </div>
     </div>
   )
