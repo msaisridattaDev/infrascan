@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { APIProvider, Map } from '@vis.gl/react-google-maps'
-import { MeMarker, ObservationMarkers, RadiusCircle } from './GoogleMapPrimitives'
+import { DensityMarkers, MeMarker, ObservationMarkers, RadiusCircle } from './GoogleMapPrimitives'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
@@ -56,13 +56,15 @@ export function MapCard({
   showMe = false,
   cluster = false,
   radiusCircle = null,
+  densityPoints = null,
+  rounded = true,
 }) {
   const dark = useIsDarkMode()
 
   if (!API_KEY) return <NoKeyFallback height={height} />
 
   return (
-    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700" style={{ height }}>
+    <div className={rounded ? 'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700' : ''} style={{ height }}>
       <APIProvider apiKey={API_KEY}>
         <Map
           center={{ lat: center[0], lng: center[1] }}
@@ -70,8 +72,10 @@ export function MapCard({
           style={{ width: '100%', height: '100%' }}
           gestureHandling="greedy"
           disableDefaultUI={false}
+          zoomControl
           styles={dark ? DARK_MAP_STYLE : undefined}
         >
+          {densityPoints && <DensityMarkers points={densityPoints} />}
           <ObservationMarkers observations={observations} cluster={cluster} />
           {showMe && center && <MeMarker center={center} />}
           {radiusCircle && <RadiusCircle center={radiusCircle.center} radiusM={radiusCircle.radiusM} />}
