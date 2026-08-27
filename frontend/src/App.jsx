@@ -206,23 +206,44 @@ function Explore({ observations, loading, onSelect }) {
         <MetricCard label="Avg Confidence" value={`${stats.avgConf}%`} />
       </div>
 
+      {!myLocation ? (
+        <button
+          onClick={useMyLocation}
+          disabled={locating}
+          className="w-full flex items-center gap-3 mb-4 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition text-left"
+        >
+          <span className="w-9 h-9 rounded-full bg-slate-900 dark:bg-slate-100 flex items-center justify-center flex-shrink-0">
+            <PinIcon className="w-4 h-4 text-white dark:text-slate-900" />
+          </span>
+          <span>
+            <span className="block text-sm font-medium text-slate-900 dark:text-slate-100">
+              {locating ? 'Locating…' : 'Browse reports near me'}
+            </span>
+            <span className="block text-xs text-slate-500 dark:text-slate-400">
+              Use your current location to filter by distance
+            </span>
+          </span>
+        </button>
+      ) : (
+        <div className="mb-4 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-slate-100">
+              <PinIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              Showing reports near you
+            </span>
+            <button
+              onClick={() => setMyLocation(null)}
+              className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+            >
+              Clear
+            </button>
+          </div>
+          <FilterChipRow value={radiusKm} onChange={setRadiusKm} options={RADIUS_OPTIONS} />
+        </div>
+      )}
+
       <div className="mb-3">
         <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
-      </div>
-
-      <div className="mb-4 flex items-center gap-2 flex-wrap">
-        {!myLocation ? (
-          <button
-            onClick={useMyLocation}
-            disabled={locating}
-            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 transition"
-          >
-            <PinIcon className="w-3.5 h-3.5" />
-            {locating ? 'Locating…' : 'Near me'}
-          </button>
-        ) : (
-          <FilterChipRow value={radiusKm} onChange={setRadiusKm} options={RADIUS_OPTIONS} />
-        )}
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
