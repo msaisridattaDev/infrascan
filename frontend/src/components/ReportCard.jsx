@@ -1,18 +1,18 @@
 import { SEVERITY_STYLE, STATUS_STYLE } from '../constants'
-import { useJurisdiction } from '../lib/useJurisdiction'
+import { placeholderRoadName } from '../lib/placeholderRoad'
 import { AgeRepeatBadge } from './AgeRepeatBadge'
 import { ConfidenceRing } from './ConfidenceRing'
 
 const SEVERITY_LABEL = { high: 'High', medium: 'Medium', low: 'Low' }
 const STATUS_LABEL = { new: 'New', review: 'In review', accepted: 'Accepted', recapture: 'Recapture' }
 
-// Cards lead with where the defect is, not what it is — a road name (or, absent a confident
-// jurisdiction match, coordinates) reads as the primary fact; the defect type and severity are
-// context underneath it, not the headline.
+// Cards lead with where the defect is, not what it is — the road name reads as the primary fact;
+// the defect type and severity are context underneath it, not the headline. road_name/ward come
+// pre-resolved on the observation itself (the backend matches it against the seeded road register
+// at serialize time), so there's never a raw-coordinate flash while a lookup is in flight.
 export function ReportCard({ o, onClick }) {
-  const { data: jurisdiction } = useJurisdiction(o.id)
-  const roadName = jurisdiction?.road_name
-  const ward = jurisdiction?.ward
+  const roadName = o.road_name || placeholderRoadName(o.id)
+  const ward = o.ward
   const date = o.captured_at ? new Date(o.captured_at).toLocaleDateString([], { day: '2-digit', month: 'short' }) : ''
   const defectLabel = o.defect_type?.replace('_', ' ')
 
@@ -23,12 +23,12 @@ export function ReportCard({ o, onClick }) {
       onClick={onClick}
       className={`flex gap-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 ${onClick ? 'cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition' : ''}`}
     >
-      <img src={o.image_data_url} alt={roadName || defectLabel} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+      <img src={o.image_data_url} alt={roadName} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <p className="text-[15px] font-semibold text-slate-900 dark:text-slate-100 tracking-tight leading-snug truncate">
-            {roadName || `${o.gps_lat?.toFixed(4)}, ${o.gps_lon?.toFixed(4)}`}
+            {roadName}
           </p>
           <ConfidenceRing confidence={o.confidence} size={26} strokeWidth={2.5} />
         </div>

@@ -156,20 +156,15 @@ function Explore({ observations, loading, onSelect }) {
           <span className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 pb-6">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 mb-4">
-            Rings on the map are an illustrative density estimate within {DEMO_RADIUS_KM}km of your location, not live
-            reports. The cards below are this preview's real curated demo reports.
-          </p>
-
+        <div className="max-w-6xl mx-auto px-4 pt-3 pb-6">
           <div className="mb-3">
             <FilterChipRow value={statusFilter} onChange={setStatusFilter} />
           </div>
 
-          <SectionHeader>Demo Reports</SectionHeader>
+          <SectionHeader>Reports</SectionHeader>
           {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
           {!loading && filteredObservations.length === 0 && (
-            <p className="text-sm text-slate-400 dark:text-slate-500">No demo reports match this filter.</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500">No reports match this filter.</p>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {filteredObservations.map((o) => (
@@ -195,7 +190,7 @@ function MyReports({ observations, loading, onSelect }) {
       <SectionHeader>My Reports</SectionHeader>
       {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
       {!loading && mine.length === 0 && (
-        <p className="text-sm text-slate-400 dark:text-slate-500">No demo reports selected for My Reports yet.</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500">No reports yet.</p>
       )}
       <div className="space-y-2">
         {mine.map((o) => (

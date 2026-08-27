@@ -127,7 +127,8 @@ def create_observation(
         select(Observation).where(Observation.content_hash == content_hash)
     ).scalar_one_or_none()
     if existing is not None:
-        return _serialize(existing)
+        segments = db.execute(select(RoadSegment)).scalars().all()
+        return _serialize(existing, segments)
 
     result = classify_defect(image_bytes)
     data_url = f"data:{image.content_type};base64,{base64.b64encode(image_bytes).decode()}"
@@ -146,7 +147,8 @@ def create_observation(
     db.add(obs)
     db.commit()
     db.refresh(obs)
-    return _serialize(obs)
+    segments = db.execute(select(RoadSegment)).scalars().all()
+    return _serialize(obs, segments)
 
 
 @app.get("/observations")
@@ -154,7 +156,18 @@ def list_observations(db: Session = Depends(get_db)):
     rows = db.execute(
         select(Observation).order_by(Observation.created_at.desc())
     ).scalars()
-    return [_serialize(o) for o in rows]
+    segments = db.execute(select(RoadSegment)).scalars().all()
+    return [_serialize(o, segments) for o in rows]
+
+
+def _nearest_segment(obs: Observation, segments: list[RoadSegment]):
+    nearest = None
+    nearest_dist = None
+    for segment in segments:
+        dist = haversine_m(obs.gps_lat, obs.gps_lon, segment.gps_lat, segment.gps_lon)
+        if nearest_dist is None or dist < nearest_dist:
+            nearest, nearest_dist = segment, dist
+    return nearest, nearest_dist
 
 
 @app.get("/observations/{observation_id}/jurisdiction")
@@ -164,12 +177,7 @@ def get_jurisdiction(observation_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="observation not found")
 
     segments = db.execute(select(RoadSegment)).scalars().all()
-    nearest = None
-    nearest_dist = None
-    for segment in segments:
-        dist = haversine_m(obs.gps_lat, obs.gps_lon, segment.gps_lat, segment.gps_lon)
-        if nearest_dist is None or dist < nearest_dist:
-            nearest, nearest_dist = segment, dist
+    nearest, nearest_dist = _nearest_segment(obs, segments)
 
     if nearest is None or nearest_dist > JURISDICTION_MATCH_RADIUS_M:
         return {
@@ -245,7 +253,15 @@ def dlp_years_is_default(contract: Contract) -> bool:
     return True
 
 
-def _serialize(o: Observation) -> dict:
+def _serialize(o: Observation, segments: list[RoadSegment] | None = None) -> dict:
+    road_name = None
+    ward = None
+    if segments:
+        nearest, nearest_dist = _nearest_segment(o, segments)
+        if nearest is not None and nearest_dist <= JURISDICTION_MATCH_RADIUS_M:
+            road_name = nearest.road_name
+            ward = nearest.ward
+
     return {
         "id": o.id,
         "image_data_url": o.image_data_url,
@@ -258,4 +274,6 @@ def _serialize(o: Observation) -> dict:
         "confidence": o.confidence,
         "status": o.status,
         "demo_tag": o.demo_tag,
+        "road_name": road_name,
+        "ward": ward,
     }
