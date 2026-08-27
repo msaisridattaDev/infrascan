@@ -9,7 +9,14 @@ export function ConfidenceRing({ confidence, size = 28, strokeWidth = 3 }) {
   return (
     <div className="relative inline-flex items-center justify-center flex-shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={strokeWidth} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          className="stroke-slate-200 dark:stroke-slate-600"
+          strokeWidth={strokeWidth}
+        />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -22,7 +29,7 @@ export function ConfidenceRing({ confidence, size = 28, strokeWidth = 3 }) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="absolute text-[8px] font-bold text-slate-700">{pct}</span>
+      <span className="absolute text-[8px] font-bold text-slate-700 dark:text-slate-200">{pct}</span>
     </div>
   )
 }

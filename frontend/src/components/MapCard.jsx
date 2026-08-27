@@ -3,7 +3,7 @@ import { SEVERITY_COLOR } from '../constants'
 
 export function MapCard({ observations, center, zoom = 12, height = 560 }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-slate-200" style={{ height }}>
+    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700" style={{ height }}>
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'

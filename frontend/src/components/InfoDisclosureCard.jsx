@@ -8,17 +8,17 @@ const ITEMS = [
 
 export function InfoDisclosureCard() {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-      <p className="text-sm font-semibold text-slate-900">How this works</p>
-      <p className="text-xs text-slate-500 mt-1">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">How this works</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
         Reports are reviewed by AI, routed by confidence, and shown publicly on the map — no account or login needed.
       </p>
       <div className="mt-3 space-y-2">
         {ITEMS.map(({ icon: Icon, title, desc }) => (
           <div key={title} className="flex items-start gap-2">
-            <Icon className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-slate-600">
-              <span className="font-medium text-slate-700">{title}.</span> {desc}
+            <Icon className="w-4 h-4 text-slate-400 dark:text-slate-500 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              <span className="font-medium text-slate-700 dark:text-slate-200">{title}.</span> {desc}
             </p>
           </div>
         ))}

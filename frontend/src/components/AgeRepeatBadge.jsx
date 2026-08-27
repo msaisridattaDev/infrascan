@@ -13,9 +13,9 @@ export function AgeRepeatBadge({ ageDays, repeatCount, repeatIndex }) {
   if (ageDays == null) return null
   return (
     <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide">
-      <span className="text-slate-400">{ageDays} {ageDays === 1 ? 'day' : 'days'} open</span>
+      <span className="text-slate-400 dark:text-slate-500">{ageDays} {ageDays === 1 ? 'day' : 'days'} open</span>
       {repeatCount > 1 && (
-        <span className="text-amber-600">· {repeatIndex}{ORDINAL_SUFFIX(repeatIndex)} report</span>
+        <span className="text-amber-600 dark:text-amber-400">· {repeatIndex}{ORDINAL_SUFFIX(repeatIndex)} report</span>
       )}
     </div>
   )

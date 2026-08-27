@@ -18,7 +18,7 @@ export function ReportDetail({ observation, onBack }) {
 
   return (
     <div className="max-w-md mx-auto px-4 py-6">
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 mb-4 hover:text-slate-700">
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
         <ArrowLeftIcon className="w-4 h-4" />
         Back
       </button>
@@ -30,7 +30,7 @@ export function ReportDetail({ observation, onBack }) {
         <Badge status={o.status}>{o.status}</Badge>
       </div>
 
-      <h1 className="text-lg font-semibold text-slate-900 capitalize mt-3">
+      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 capitalize mt-3">
         {o.defect_type?.replace('_', ' ')}
       </h1>
 
@@ -38,7 +38,7 @@ export function ReportDetail({ observation, onBack }) {
         <SeverityBadge severity={o.severity} />
         <div className="flex items-center gap-1.5">
           <ConfidenceRing confidence={o.confidence} />
-          <span className="text-xs text-slate-500">{Math.round(o.confidence * 100)}% confidence</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{Math.round(o.confidence * 100)}% confidence</span>
         </div>
       </div>
 
