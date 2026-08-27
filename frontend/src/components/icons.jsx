@@ -187,6 +187,22 @@ export function SendIcon(props) {
   )
 }
 
+export function PlayIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M6 4v16l14-8Z" fill="currentColor" stroke="none" />
+    </Svg>
+  )
+}
+
+export function StopIcon(props) {
+  return (
+    <Svg {...props}>
+      <rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" stroke="none" />
+    </Svg>
+  )
+}
+
 export function HeartIcon(props) {
   return (
     <Svg {...props}>

@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AccountabilityRollup } from './components/AccountabilityRollup'
 import { BottomNav } from './components/BottomNav'
-import { PrimaryButton, SecondaryButton } from './components/Button'
+import { SecondaryButton } from './components/Button'
+import { DriveCapture } from './components/DriveCapture'
 import { FilterChipRow } from './components/FilterChipRow'
 import { HeroCTA } from './components/HeroCTA'
 import { PinIcon } from './components/icons'
 import { InfoDisclosureCard } from './components/InfoDisclosureCard'
 import { MapCard } from './components/MapCard'
 import { MetricCard } from './components/MetricCard'
-import { NearbyReportsList } from './components/NearbyReportsList'
+import { PhotoCapture } from './components/PhotoCapture'
 import { ReportCard } from './components/ReportCard'
 import { ReportDetail } from './components/ReportDetail'
 import { SectionHeader } from './components/SectionHeader'
 import { ThemeToggle } from './components/ThemeToggle'
-import { STATUS_STYLE } from './constants'
 import { getDeviceId, resetDeviceId } from './lib/deviceId'
 import { useAccountabilityRollup } from './lib/useAccountabilityRollup'
 import { findNearby, withAgeAndRepeat } from './lib/reportStats'
@@ -46,104 +46,38 @@ function Header({ theme, onToggleTheme }) {
 }
 
 function Home({ observations, onSubmitted }) {
-  const [file, setFile] = useState(null)
-  const [preview, setPreview] = useState(null)
-  const [location, setLocation] = useState(null)
-  const [status, setStatus] = useState('idle')
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
-
-  const nearby = useMemo(
-    () => (location ? findNearby(observations, location.lat, location.lon) : []),
-    [observations, location]
-  )
-
-  function onFileChange(e) {
-    const f = e.target.files[0]
-    setFile(f)
-    setResult(null)
-    setError(null)
-    setLocation(null)
-    setPreview(f ? URL.createObjectURL(f) : null)
-    if (!f) return
-
-    setStatus('locating')
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude })
-        setStatus('idle')
-      },
-      () => {
-        setError('Location permission denied — GPS is required to report.')
-        setStatus('idle')
-      }
-    )
-  }
-
-  function submitReport() {
-    if (!file || !location) return
-    setStatus('uploading')
-    setError(null)
-
-    const form = new FormData()
-    form.append('image', file)
-    form.append('gps_lat', location.lat)
-    form.append('gps_lon', location.lon)
-    form.append('device_id', getDeviceId())
-
-    fetch(`${API}/observations`, { method: 'POST', body: form })
-      .then((res) => res.json())
-      .then((data) => {
-        setResult(data)
-        setStatus('done')
-        onSubmitted?.()
-      })
-      .catch(() => {
-        setError('Upload failed — is the backend reachable?')
-        setStatus('idle')
-      })
-  }
+  const [mode, setMode] = useState('drive')
 
   return (
     <div className="max-w-md mx-auto px-4 py-6">
       <HeroCTA
         title="See a road defect?"
-        subtitle="Snap a photo, we'll geotag it and flag it for review automatically."
+        subtitle={
+          mode === 'drive'
+            ? "Start a drive and we'll capture, geotag, and review frames automatically."
+            : "Snap a photo, we'll geotag it and flag it for review automatically."
+        }
       />
 
-      <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 mb-4 cursor-pointer bg-white dark:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 transition">
-        <input type="file" accept="image/*" capture="environment" onChange={onFileChange} className="hidden" />
-        {preview ? (
-          <img src={preview} alt="preview" className="max-h-56 rounded-lg" />
-        ) : (
-          <>
-            <span className="text-3xl">📷</span>
-            <span className="text-sm text-slate-500 dark:text-slate-400">Tap to take a photo</span>
-          </>
-        )}
-      </label>
+      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mb-4">
+        <button
+          onClick={() => setMode('drive')}
+          className={`flex-1 py-1.5 text-sm rounded-md font-medium transition ${mode === 'drive' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
+        >
+          Drive
+        </button>
+        <button
+          onClick={() => setMode('photo')}
+          className={`flex-1 py-1.5 text-sm rounded-md font-medium transition ${mode === 'photo' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
+        >
+          Single Photo
+        </button>
+      </div>
 
-      <NearbyReportsList nearby={nearby} />
-
-      <PrimaryButton
-        disabled={!file || !location || status === 'uploading' || status === 'locating'}
-        onClick={submitReport}
-        className="w-full"
-      >
-        {status === 'locating' && 'Getting location…'}
-        {status === 'uploading' && 'Submitting…'}
-        {(status === 'idle' || status === 'done') && 'Submit Report'}
-      </PrimaryButton>
-
-      {error && <p className="text-red-600 dark:text-red-400 text-sm mt-3">{error}</p>}
-
-      {result && (
-        <div className={`mt-4 rounded-xl border p-4 ${STATUS_STYLE[result.status] || STATUS_STYLE.new}`}>
-          <p className="font-semibold capitalize">{result.defect_type?.replace('_', ' ')}</p>
-          <p className="text-sm mt-1">Severity: {result.severity}</p>
-          <p className="text-sm">Confidence: {Math.round(result.confidence * 100)}%</p>
-          <p className="text-sm">Status: {result.status}</p>
-        </div>
+      {mode === 'drive' ? (
+        <DriveCapture />
+      ) : (
+        <PhotoCapture observations={observations} onSubmitted={onSubmitted} />
       )}
 
       <div className="mt-6">
