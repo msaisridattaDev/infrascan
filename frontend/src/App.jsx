@@ -164,7 +164,9 @@ function Explore({ observations, loading, onSelect }) {
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-slate-100">
               <PinIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              Showing reports near you
+              {radiusKm === 'all'
+                ? 'Showing reports near you'
+                : `${filteredObservations.length} report${filteredObservations.length === 1 ? '' : 's'} within ${radiusKm}km`}
             </span>
             <button
               onClick={() => setMyLocation(null)}
@@ -196,7 +198,13 @@ function Explore({ observations, loading, onSelect }) {
         </div>
 
         <div className="md:w-3/5">
-          <MapCard observations={filteredObservations} center={center} showMe={!!myLocation} />
+          <MapCard
+            observations={filteredObservations}
+            center={center}
+            showMe={!!myLocation}
+            cluster
+            radiusCircle={myLocation && radiusKm !== 'all' ? { center, radiusM: Number(radiusKm) * 1000 } : null}
+          />
           <AccountabilityRollup rollup={rollup} loading={rollupLoading} />
         </div>
       </div>

@@ -107,4 +107,36 @@ SEGMENTS = [
         "completion_date": date(2023, 2, 15),
         "dlp_years": 5,
     },
+    {
+        # Covers the real device-captured test reports already live from Miyapur, Hyderabad —
+        # placing a segment here means those genuine reports get a confident jurisdiction match too.
+        "road_name": "Bollaram Road, Miyapur, Hyderabad",
+        "gps_lat": 17.4933,
+        "gps_lon": 78.3679,
+        "contractor_name": "Sri Venkateswara Constructions",
+        "tender_number": "GHMC/TS/2023/RM-072",
+        "responsible_officer": "Executive Engineer, GHMC Kukatpally Circle",
+        "completion_date": date(2023, 6, 20),
+        "dlp_years": 5,
+    },
+    {
+        "road_name": "T. Munnekollala Road, Bengaluru",
+        "gps_lat": 12.9345,
+        "gps_lon": 77.7186,
+        "contractor_name": "GreenTech Road Infra",
+        "tender_number": "BBMP/BLR/2024/RM-098",
+        "responsible_officer": "Executive Engineer, BBMP Road Infrastructure Zone 5",
+        "completion_date": date(2024, 5, 1),
+        "dlp_years": 3,
+    },
+    {
+        "road_name": "GS Road, Guwahati",
+        "gps_lat": 26.1445,
+        "gps_lon": 91.7362,
+        "contractor_name": "Assam State Road Project Ltd.",
+        "tender_number": "PWD/AS/2023/RM-045",
+        "responsible_officer": "Executive Engineer, PWD Guwahati Division",
+        "completion_date": date(2023, 9, 10),
+        "dlp_years": 5,
+    },
 ]
