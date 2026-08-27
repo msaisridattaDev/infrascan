@@ -1,28 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import { Circle, CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
-import MarkerClusterGroup from 'react-leaflet-cluster'
-import L from 'leaflet'
-import { SEVERITY_COLOR } from '../constants'
+import { useEffect, useState } from 'react'
+import { APIProvider, Map } from '@vis.gl/react-google-maps'
+import { MeMarker, ObservationMarkers, RadiusCircle } from './GoogleMapPrimitives'
 
-// react-leaflet's MapContainer only applies the `center` prop on first mount — later prop
-// changes (a GPS fix arriving, a "near me" click) are silently ignored unless something calls
-// setView() itself. This bridges that gap so the map actually follows real location updates.
-function Recenter({ center, zoom }) {
-  const map = useMap()
-  const first = useRef(true)
-
-  useEffect(() => {
-    if (!center) return
-    map.setView(center, zoom, { animate: !first.current })
-    first.current = false
-  }, [center, zoom, map])
-
-  return null
-}
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 // MapCard can render deep in the tree (Explore, Drive, Report Detail), so rather than threading
 // the theme prop through every caller, it watches the same <html class="dark"> toggle useDarkMode
-// already sets, and switches basemap style to match — same signal, no prop drilling.
+// already sets, and switches the map style to match — same signal, no prop drilling.
 function useIsDarkMode() {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
@@ -37,39 +21,30 @@ function useIsDarkMode() {
   return dark
 }
 
-const youAreHereIcon = L.divIcon({
-  className: '',
-  html: '<div class="you-are-here-marker"><div class="you-are-here-pulse"></div><div class="you-are-here-dot"></div></div>',
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-})
+const DARK_MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#1a2233' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a2233' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#8896ab' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#3a4a63' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#243247' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1e3327' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2b3852' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1a2233' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3c5270' }] },
+  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#243247' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0f1826' }] },
+]
 
-function clusterIcon(cluster) {
-  const count = cluster.getChildCount()
-  const size = count >= 50 ? 44 : count >= 10 ? 38 : 32
-  return L.divIcon({
-    html: `<div class="cluster-marker" style="width:${size}px;height:${size}px">${count}</div>`,
-    className: '',
-    iconSize: [size, size],
-  })
-}
-
-function ObservationMarker({ o }) {
+function NoKeyFallback({ height }) {
   return (
-    <CircleMarker
-      center={[o.gps_lat, o.gps_lon]}
-      radius={9}
-      pathOptions={{
-        color: SEVERITY_COLOR[o.severity] || '#64748b',
-        fillColor: SEVERITY_COLOR[o.severity] || '#64748b',
-        fillOpacity: 0.8,
-      }}
+    <div
+      className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center p-4 text-center"
+      style={{ height }}
     >
-      <Popup>
-        <p className="font-medium capitalize">{o.defect_type?.replace('_', ' ')} — {o.severity}</p>
-        <p>{Math.round(o.confidence * 100)}% confidence · {o.status}</p>
-      </Popup>
-    </CircleMarker>
+      <p className="text-xs text-slate-400 dark:text-slate-500">
+        Map unavailable — VITE_GOOGLE_MAPS_API_KEY isn't configured.
+      </p>
+    </div>
   )
 }
 
@@ -83,43 +58,25 @@ export function MapCard({
   radiusCircle = null,
 }) {
   const dark = useIsDarkMode()
-  const tileStyle = dark ? 'dark_all' : 'rastertiles/voyager'
+
+  if (!API_KEY) return <NoKeyFallback height={height} />
 
   return (
     <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700" style={{ height }}>
-      <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
-        <Recenter center={center} zoom={zoom} />
-        <TileLayer
-          attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
-          url={`https://{s}.basemaps.cartocdn.com/${tileStyle}/{z}/{x}/{y}{r}.png`}
-          subdomains="abcd"
-          maxZoom={20}
-        />
-
-        {radiusCircle && (
-          <Circle
-            center={radiusCircle.center}
-            radius={radiusCircle.radiusM}
-            pathOptions={{ color: '#2563eb', weight: 1.5, fillColor: '#2563eb', fillOpacity: 0.06 }}
-          />
-        )}
-
-        {showMe && center && (
-          <Marker position={center} icon={youAreHereIcon}>
-            <Popup>You are here</Popup>
-          </Marker>
-        )}
-
-        {cluster ? (
-          <MarkerClusterGroup iconCreateFunction={clusterIcon} showCoverageOnHover={false} spiderfyOnMaxZoom>
-            {observations.map((o) => (
-              <ObservationMarker key={o.id} o={o} />
-            ))}
-          </MarkerClusterGroup>
-        ) : (
-          observations.map((o) => <ObservationMarker key={o.id} o={o} />)
-        )}
-      </MapContainer>
+      <APIProvider apiKey={API_KEY}>
+        <Map
+          center={{ lat: center[0], lng: center[1] }}
+          zoom={zoom}
+          style={{ width: '100%', height: '100%' }}
+          gestureHandling="greedy"
+          disableDefaultUI={false}
+          styles={dark ? DARK_MAP_STYLE : undefined}
+        >
+          <ObservationMarkers observations={observations} cluster={cluster} />
+          {showMe && center && <MeMarker center={center} />}
+          {radiusCircle && <RadiusCircle center={radiusCircle.center} radiusM={radiusCircle.radiusM} />}
+        </Map>
+      </APIProvider>
     </div>
   )
 }
